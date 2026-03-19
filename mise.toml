@@ -1,0 +1,112 @@
+[tools]
+node = "24.14.0"
+pnpm = "10.30.3"
+rust = "1.93.1"
+
+[tasks.bump-pnpm]
+description = "Bump the pnpm version in package.json to the latest version"
+run = [
+  "pnpm pkg delete packageManager",
+  "pnpm pkg set packageManager=pnpm@$(pnpm -v)",
+]
+
+[tasks.build]
+description = "Build JS packages and Rust workspace"
+run = [
+  "pnpm run build",
+  "cargo build --workspace",
+]
+
+[tasks.dev]
+description = "Run the development server"
+run = ["pnpm run dev"]
+
+[tasks.lint]
+description = "Run the linter"
+run = [
+  "pnpm run lint",
+  "cargo clippy --all-targets --all-features -- -D warnings",
+  "mise fmt-check",
+]
+
+[tasks.fmt-check]
+description = "Check code formatting without modifying files"
+run = "cargo fmt --check"
+
+[tasks.format]
+description = "Format the code"
+run = ["pnpm run format", "cargo fmt --all"]
+
+[tasks.test]
+description = "Run JS and Rust tests"
+run = [
+  "pnpm --filter @taiga-tech/cli run test",
+  "cargo test --workspace",
+]
+
+[tasks.test-coverage-js]
+description = "Run JS test coverage (Vitest)"
+run = "pnpm --filter @taiga-tech/cli run test:coverage"
+
+[tasks.test-coverage-rust]
+description = "Run Rust test coverage with cargo-llvm-cov"
+run = [
+  "cargo llvm-cov --version || cargo install cargo-llvm-cov --locked",
+  "rustup component add llvm-tools-preview",
+  "cargo llvm-cov --workspace --lcov --summary-only --output-path target/rust.lcov --fail-under-functions 100 --fail-under-lines 100 --fail-under-regions 100",
+]
+
+[tasks.test-coverage]
+description = "Run JS and Rust test coverage"
+run = [
+  "mise run test-coverage-js",
+  "mise run test-coverage-rust",
+]
+
+[tasks.coverage]
+description = "Alias of test-coverage"
+run = "mise run test-coverage"
+
+[tasks.fix]
+description = "Auto-fix clippy warnings where possible"
+run = "cargo clippy --all-targets --all-features --fix --allow-dirty"
+
+[tasks.check]
+description = "Run lint, type checks, and tests"
+run = [
+  "mise run lint",
+  "pnpm run check-types",
+  "mise run test",
+]
+
+[tasks.cli-binary]
+description = "Build and place host-target binary in vendor/ with CI-compatible paths"
+run = "scripts/place-binary-like-ci.sh --build"
+
+[tasks.cli-binary-target]
+description = "Build and place binary for TARGET=<rust-target-triple>"
+run = "scripts/place-binary-like-ci.sh --target \"${TARGET:?set TARGET to a rust target triple}\" --build"
+
+[tasks.cli-launcher-build]
+description = "Build the Node launcher package"
+run = "pnpm --filter @taiga-tech/cli run build"
+
+[tasks.cli-launcher-run]
+description = "Run the launcher (expects binary already placed)"
+run = "node packages/cli/dist/index.cjs"
+
+[tasks.cli]
+description = "CI-like local CLI flow (host target): place binary, build launcher, run"
+run = [
+  "mise run cli-binary",
+  "mise run cli-launcher-build",
+  "mise run cli-launcher-run",
+]
+
+[tasks.cli-target]
+description = "CI-like local CLI flow for TARGET=<rust-target-triple>"
+run = [
+  "mise run cli-binary-target",
+  "mise run cli-launcher-build",
+  "mise run cli-launcher-run",
+]

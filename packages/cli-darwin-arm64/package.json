@@ -1,0 +1,17 @@
+{
+    "name": "@taiga-tech/cli-darwin-arm64",
+    "version": "0.1.0",
+    "description": "macOS arm64 binary for @taiga-tech/cli",
+    "os": [
+        "darwin"
+    ],
+    "cpu": [
+        "arm64"
+    ],
+    "files": [
+        "vendor/**"
+    ],
+    "publishConfig": {
+        "access": "public"
+    }
+}

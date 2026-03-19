@@ -1,0 +1,37 @@
+{
+    "name": "@taiga-tech/cli",
+    "version": "0.1.0",
+    "description": "CLI launcher for sample-cli",
+    "bin": {
+        "sample-cli": "./dist/index.cjs"
+    },
+    "files": [
+        "dist/**"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "dev": "node dist/index.cjs"
+    },
+    "dependencies": {
+        "detect-libc": "^2.0.4"
+    },
+    "optionalDependencies": {
+        "@taiga-tech/cli-darwin-arm64": "workspace:*",
+        "@taiga-tech/cli-darwin-x64": "workspace:*",
+        "@taiga-tech/cli-linux-x64-gnu": "workspace:*",
+        "@taiga-tech/cli-linux-x64-musl": "workspace:*",
+        "@taiga-tech/cli-win32-x64": "workspace:*"
+    },
+    "devDependencies": {
+        "@types/node": "^24.0.0",
+        "@vitest/coverage-v8": "^3.2.4",
+        "tsup": "^8.0.0",
+        "typescript": "5.9.3",
+        "vitest": "^3.0.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

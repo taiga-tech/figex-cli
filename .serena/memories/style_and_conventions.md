@@ -1,0 +1,1 @@
+TypeScript uses strict mode, 4-space indentation, and single quotes. JS tests live under packages/cli/src and use Vitest with _.test.ts naming. Rust code should be formatted with cargo fmt and linted with cargo clippy --all-targets --all-features -- -D warnings. Package naming for platform packages follows @taiga-tech/cli-_. Commit messages should follow Conventional Commits.

@@ -1,7 +1,7 @@
 {
-    "name": "@taiga-tech/cli-win32-x64",
+    "name": "@taiga-tech/figex-cli-win32-x64",
     "version": "0.1.0",
-    "description": "Windows x64 binary for @taiga-tech/cli",
+    "description": "Windows x64 binary for @taiga-tech/figex-cli",
     "os": [
         "win32"
     ],

@@ -1,11 +1,15 @@
 [package]
-name = "sample-cli"
+name = "figex-cli"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "sample-cli"
+name = "figex-cli"
 path = "src/main.rs"
 
 [dependencies]
-sample-cli-core = { path = "../core" }
+anyhow = "1.0.102"
+figex-cli-core = { path = "../core" }
+figlet-rs = "1.0.0"
+owo-colors = "4.3.0"
+rust-embed = "8.11.0"

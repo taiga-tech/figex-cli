@@ -63,7 +63,7 @@ if [[ -z "$target" ]]; then
     exit 1
 fi
 
-binary_name="sample-cli"
+binary_name="figex-cli"
 case "$target" in
     aarch64-apple-darwin)
         platform_pkg="cli-darwin-arm64"
@@ -73,7 +73,7 @@ case "$target" in
         ;;
     x86_64-pc-windows-msvc)
         platform_pkg="cli-win32-x64"
-        binary_name="sample-cli.exe"
+        binary_name="figex-cli.exe"
         ;;
     x86_64-unknown-linux-gnu)
         platform_pkg="cli-linux-x64-gnu"
@@ -92,7 +92,7 @@ if [[ "$build" -eq 1 ]]; then
 fi
 
 src="target/$target/release/$binary_name"
-dst_dir="packages/$platform_pkg/vendor/$target/sample-cli"
+dst_dir="packages/$platform_pkg/vendor/$target/figex-cli"
 dst="$dst_dir/$binary_name"
 
 if [[ ! -f "$src" ]]; then

@@ -1,25 +1,25 @@
-# sample-cli
+# figex-cli
 
 Rust 製ネイティブ CLI を npm で配布するためのモノレポです。
-`@taiga-tech/cli`（TypeScript ランチャ）が実行環境を判定し、対応するプラットフォーム別パッケージに同梱されたネイティブバイナリを起動します。
+`@taiga-tech/figex-cli`（TypeScript ランチャ）が実行環境を判定し、対応するプラットフォーム別パッケージに同梱されたネイティブバイナリを起動します。
 
 ## 構成概要
 
 - `crates/core`: Rust コアライブラリ
-- `crates/cli`: Rust バイナリ本体（`sample-cli`）
-- `packages/cli`: npm 配布用ランチャ（`sample-cli` コマンド）
+- `crates/cli`: Rust バイナリ本体（`figex-cli`）
+- `packages/cli`: npm 配布用ランチャ（`figex-cli` コマンド）
 - `packages/cli-<platform>`: プラットフォーム別バイナリ同梱パッケージ
 - `scripts/place-binary-like-ci.sh`: CI と同じ規約で `vendor/` にバイナリを配置
 
 ## サポートプラットフォーム
 
-| Node 判定           | Rust target triple          | npm package                      |
-| ------------------- | --------------------------- | -------------------------------- |
-| `darwin/arm64`      | `aarch64-apple-darwin`      | `@taiga-tech/cli-darwin-arm64`   |
-| `darwin/x64`        | `x86_64-apple-darwin`       | `@taiga-tech/cli-darwin-x64`     |
-| `win32/x64`         | `x86_64-pc-windows-msvc`    | `@taiga-tech/cli-win32-x64`      |
-| `linux/x64` + glibc | `x86_64-unknown-linux-gnu`  | `@taiga-tech/cli-linux-x64-gnu`  |
-| `linux/x64` + musl  | `x86_64-unknown-linux-musl` | `@taiga-tech/cli-linux-x64-musl` |
+| Node 判定           | Rust target triple          | npm package                            |
+| ------------------- | --------------------------- | -------------------------------------- |
+| `darwin/arm64`      | `aarch64-apple-darwin`      | `@taiga-tech/figex-cli-darwin-arm64`   |
+| `darwin/x64`        | `x86_64-apple-darwin`       | `@taiga-tech/figex-cli-darwin-x64`     |
+| `win32/x64`         | `x86_64-pc-windows-msvc`    | `@taiga-tech/figex-cli-win32-x64`      |
+| `linux/x64` + glibc | `x86_64-unknown-linux-gnu`  | `@taiga-tech/figex-cli-linux-x64-gnu`  |
+| `linux/x64` + musl  | `x86_64-unknown-linux-musl` | `@taiga-tech/figex-cli-linux-x64-musl` |
 
 ## 要件
 
@@ -66,7 +66,7 @@ TARGET=x86_64-unknown-linux-musl mise run cli-target
 scripts/place-binary-like-ci.sh --build
 
 # 2) ランチャーをビルド
-pnpm --filter @taiga-tech/cli run build
+pnpm --filter @taiga-tech/figex-cli run build
 
 # 3) ランチャーを実行
 node packages/cli/dist/index.cjs
@@ -77,7 +77,7 @@ node packages/cli/dist/index.cjs
 プラットフォーム別パッケージには次のパスでバイナリを格納します。
 
 ```text
-packages/cli-*/vendor/<target-triple>/sample-cli/sample-cli(.exe)
+packages/cli-*/vendor/<target-triple>/figex-cli/figex-cli(.exe)
 ```
 
 この規約は `scripts/place-binary-like-ci.sh` に実装されています。
@@ -111,7 +111,7 @@ packages/cli-*/vendor/<target-triple>/sample-cli/sample-cli(.exe)
 
 - コミットメッセージは Conventional Commits（`feat:`, `fix:`, `refactor:` など）
 - 公開挙動やバージョンに影響する変更は `.changeset/` を追加
-- publish 順序は platform package を先、`@taiga-tech/cli` を後
+- publish 順序は platform package を先、`@taiga-tech/figex-cli` を後
 
 ## 注意点
 

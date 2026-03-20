@@ -4,8 +4,8 @@ fn greet_returns_expected_message() {
     // (no preconditions)
 
     // When
-    let message = sample_cli_core::greet();
+    let message = figex_cli_core::greet();
 
     // Then
-    assert_eq!(message, "Hello from sample-cli-core!");
+    assert_eq!(message, "Hello from figex-cli-core!");
 }

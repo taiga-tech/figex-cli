@@ -40,13 +40,13 @@ run = ["pnpm run format", "cargo fmt --all"]
 [tasks.test]
 description = "Run JS and Rust tests"
 run = [
-  "pnpm --filter @taiga-tech/cli run test",
+  "pnpm --filter @taiga-tech/figex-cli run test",
   "cargo test --workspace",
 ]
 
 [tasks.test-coverage-js]
 description = "Run JS test coverage (Vitest)"
-run = "pnpm --filter @taiga-tech/cli run test:coverage"
+run = "pnpm --filter @taiga-tech/figex-cli run test:coverage"
 
 [tasks.test-coverage-rust]
 description = "Run Rust test coverage with cargo-llvm-cov"
@@ -89,7 +89,7 @@ run = "scripts/place-binary-like-ci.sh --target \"${TARGET:?set TARGET to a rust
 
 [tasks.cli-launcher-build]
 description = "Build the Node launcher package"
-run = "pnpm --filter @taiga-tech/cli run build"
+run = "pnpm --filter @taiga-tech/figex-cli run build"
 
 [tasks.cli-launcher-run]
 description = "Run the launcher (expects binary already placed)"

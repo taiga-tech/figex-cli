@@ -5,37 +5,37 @@ import { resolvePackageName, resolveTargetTriple } from './platform'
 describe('resolvePackageName', () => {
     // ── 正常系: darwin ────────────────────────────────────────────────────────
 
-    it('darwin/arm64 → @taiga-tech/cli-darwin-arm64', () => {
+    it('darwin/arm64 → @taiga-tech/figex-cli-darwin-arm64', () => {
         expect(resolvePackageName('darwin', 'arm64', false)).toBe(
-            '@taiga-tech/cli-darwin-arm64'
+            '@taiga-tech/figex-cli-darwin-arm64'
         )
     })
 
-    it('darwin/x64 → @taiga-tech/cli-darwin-x64', () => {
+    it('darwin/x64 → @taiga-tech/figex-cli-darwin-x64', () => {
         expect(resolvePackageName('darwin', 'x64', false)).toBe(
-            '@taiga-tech/cli-darwin-x64'
+            '@taiga-tech/figex-cli-darwin-x64'
         )
     })
 
     // ── 正常系: win32 ─────────────────────────────────────────────────────────
 
-    it('win32/x64 → @taiga-tech/cli-win32-x64', () => {
+    it('win32/x64 → @taiga-tech/figex-cli-win32-x64', () => {
         expect(resolvePackageName('win32', 'x64', false)).toBe(
-            '@taiga-tech/cli-win32-x64'
+            '@taiga-tech/figex-cli-win32-x64'
         )
     })
 
     // ── 正常系: linux ─────────────────────────────────────────────────────────
 
-    it('linux/x64 + glibc 検出 → @taiga-tech/cli-linux-x64-gnu', () => {
+    it('linux/x64 + glibc 検出 → @taiga-tech/figex-cli-linux-x64-gnu', () => {
         expect(resolvePackageName('linux', 'x64', true)).toBe(
-            '@taiga-tech/cli-linux-x64-gnu'
+            '@taiga-tech/figex-cli-linux-x64-gnu'
         )
     })
 
-    it('linux/x64 + glibc 未検出 → @taiga-tech/cli-linux-x64-musl', () => {
+    it('linux/x64 + glibc 未検出 → @taiga-tech/figex-cli-linux-x64-musl', () => {
         expect(resolvePackageName('linux', 'x64', false)).toBe(
-            '@taiga-tech/cli-linux-x64-musl'
+            '@taiga-tech/figex-cli-linux-x64-musl'
         )
     })
 
@@ -43,7 +43,7 @@ describe('resolvePackageName', () => {
 
     it('darwin では isGlibc フラグを無視して arm64 パッケージを返す', () => {
         expect(resolvePackageName('darwin', 'arm64', true)).toBe(
-            '@taiga-tech/cli-darwin-arm64'
+            '@taiga-tech/figex-cli-darwin-arm64'
         )
     })
 

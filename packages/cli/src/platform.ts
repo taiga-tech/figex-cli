@@ -4,23 +4,23 @@ const PLATFORM_ENTRIES: Readonly<
     Record<string, { pkg: string; triple: string }>
 > = {
     'darwin/arm64': {
-        pkg: `${SCOPE}/cli-darwin-arm64`,
+        pkg: `${SCOPE}/figex-cli-darwin-arm64`,
         triple: 'aarch64-apple-darwin',
     },
     'darwin/x64': {
-        pkg: `${SCOPE}/cli-darwin-x64`,
+        pkg: `${SCOPE}/figex-cli-darwin-x64`,
         triple: 'x86_64-apple-darwin',
     },
     'win32/x64': {
-        pkg: `${SCOPE}/cli-win32-x64`,
+        pkg: `${SCOPE}/figex-cli-win32-x64`,
         triple: 'x86_64-pc-windows-msvc',
     },
     'linux/x64/gnu': {
-        pkg: `${SCOPE}/cli-linux-x64-gnu`,
+        pkg: `${SCOPE}/figex-cli-linux-x64-gnu`,
         triple: 'x86_64-unknown-linux-gnu',
     },
     'linux/x64/musl': {
-        pkg: `${SCOPE}/cli-linux-x64-musl`,
+        pkg: `${SCOPE}/figex-cli-linux-x64-musl`,
         triple: 'x86_64-unknown-linux-musl',
     },
 }

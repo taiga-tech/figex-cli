@@ -1,5 +1,5 @@
 {
-    "name": "sample-cli",
+    "name": "figex-cli",
     "private": true,
     "scripts": {
         "build": "turbo run build",

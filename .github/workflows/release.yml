@@ -44,20 +44,20 @@ jobs:
       - name: Copy binary to platform package (Unix)
         if: runner.os != 'Windows'
         run: |
-          cp target/${{ matrix.target }}/release/sample-cli \
-            packages/${{ matrix.platform_pkg }}/vendor/${{ matrix.target }}/sample-cli/sample-cli
+          cp target/${{ matrix.target }}/release/figex-cli \
+            packages/${{ matrix.platform_pkg }}/vendor/${{ matrix.target }}/figex-cli/figex-cli
 
       - name: Copy binary to platform package (Windows)
         if: runner.os == 'Windows'
         run: |
-          copy target\${{ matrix.target }}\release\sample-cli.exe `
-            packages\${{ matrix.platform_pkg }}\vendor\${{ matrix.target }}\sample-cli\sample-cli.exe
+          copy target\${{ matrix.target }}\release\figex-cli.exe `
+            packages\${{ matrix.platform_pkg }}\vendor\${{ matrix.target }}\figex-cli\figex-cli.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: binary-${{ matrix.target }}
-          path: packages/${{ matrix.platform_pkg }}/vendor/${{ matrix.target }}/sample-cli/
+          path: packages/${{ matrix.platform_pkg }}/vendor/${{ matrix.target }}/figex-cli/
 
   publish:
     name: Publish to npm
@@ -80,17 +80,17 @@ jobs:
 
       - name: Place binaries into vendor directories
         run: |
-          cp -r binary-aarch64-apple-darwin/. packages/cli-darwin-arm64/vendor/aarch64-apple-darwin/sample-cli/
-          cp -r binary-x86_64-apple-darwin/. packages/cli-darwin-x64/vendor/x86_64-apple-darwin/sample-cli/
-          cp -r binary-x86_64-pc-windows-msvc/. packages/cli-win32-x64/vendor/x86_64-pc-windows-msvc/sample-cli/
-          cp -r binary-x86_64-unknown-linux-gnu/. packages/cli-linux-x64-gnu/vendor/x86_64-unknown-linux-gnu/sample-cli/
-          cp -r binary-x86_64-unknown-linux-musl/. packages/cli-linux-x64-musl/vendor/x86_64-unknown-linux-musl/sample-cli/
+          cp -r binary-aarch64-apple-darwin/. packages/cli-darwin-arm64/vendor/aarch64-apple-darwin/figex-cli/
+          cp -r binary-x86_64-apple-darwin/. packages/cli-darwin-x64/vendor/x86_64-apple-darwin/figex-cli/
+          cp -r binary-x86_64-pc-windows-msvc/. packages/cli-win32-x64/vendor/x86_64-pc-windows-msvc/figex-cli/
+          cp -r binary-x86_64-unknown-linux-gnu/. packages/cli-linux-x64-gnu/vendor/x86_64-unknown-linux-gnu/figex-cli/
+          cp -r binary-x86_64-unknown-linux-musl/. packages/cli-linux-x64-musl/vendor/x86_64-unknown-linux-musl/figex-cli/
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build launcher
-        run: pnpm --filter @taiga-tech/cli build
+        run: pnpm --filter @taiga-tech/figex-cli build
 
       - name: Configure npm auth
         run: |
@@ -102,15 +102,15 @@ jobs:
       # Publish platform packages first, then the launcher (order is required)
       - name: Publish platform packages
         run: |
-          pnpm --filter @taiga-tech/cli-darwin-arm64 publish --no-git-checks
-          pnpm --filter @taiga-tech/cli-darwin-x64 publish --no-git-checks
-          pnpm --filter @taiga-tech/cli-win32-x64 publish --no-git-checks
-          pnpm --filter @taiga-tech/cli-linux-x64-gnu publish --no-git-checks
-          pnpm --filter @taiga-tech/cli-linux-x64-musl publish --no-git-checks
+          pnpm --filter @taiga-tech/figex-cli-darwin-arm64 publish --no-git-checks
+          pnpm --filter @taiga-tech/figex-cli-darwin-x64 publish --no-git-checks
+          pnpm --filter @taiga-tech/figex-cli-win32-x64 publish --no-git-checks
+          pnpm --filter @taiga-tech/figex-cli-linux-x64-gnu publish --no-git-checks
+          pnpm --filter @taiga-tech/figex-cli-linux-x64-musl publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish launcher
-        run: pnpm --filter @taiga-tech/cli publish --no-git-checks
+        run: pnpm --filter @taiga-tech/figex-cli publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

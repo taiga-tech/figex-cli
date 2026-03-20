@@ -72,14 +72,14 @@ function setupLauncher(options: SetupOptions = {}) {
     setProcessProperty('arch', options.arch ?? 'x64')
     setProcessProperty(
         'argv',
-        options.argv ?? ['node', 'sample-cli', '--flag', 'value']
+        options.argv ?? ['node', 'figex-cli', '--flag', 'value']
     )
 
     familySyncMock.mockReturnValue(
         options.libcFamily === undefined ? 'glibc' : options.libcFamily
     )
     resolvePackageNameMock.mockReturnValue(
-        options.packageName ?? '@taiga-tech/cli-linux-x64-gnu'
+        options.packageName ?? '@taiga-tech/figex-cli-linux-x64-gnu'
     )
     resolveTargetTripleMock.mockReturnValue(
         options.targetTriple ?? 'x86_64-unknown-linux-gnu'
@@ -141,14 +141,14 @@ describe('index launcher', () => {
         )
 
         const pkgDir = path.dirname(
-            require.resolve('@taiga-tech/cli-linux-x64-gnu/package.json')
+            require.resolve('@taiga-tech/figex-cli-linux-x64-gnu/package.json')
         )
         const expectedBinaryPath = path.join(
             pkgDir,
             'vendor',
             'x86_64-unknown-linux-gnu',
-            'sample-cli',
-            'sample-cli'
+            'figex-cli',
+            'figex-cli'
         )
 
         expect(spawnSyncMock).toHaveBeenCalledWith(
@@ -163,7 +163,7 @@ describe('index launcher', () => {
         // Given
         setupLauncher({
             libcFamily: null,
-            packageName: '@taiga-tech/cli-win32-x64',
+            packageName: '@taiga-tech/figex-cli-win32-x64',
             platform: 'win32',
             spawnResult: { status: 0 },
             targetTriple: 'x86_64-pc-windows-msvc',
@@ -174,14 +174,14 @@ describe('index launcher', () => {
 
         // Then
         const pkgDir = path.dirname(
-            require.resolve('@taiga-tech/cli-win32-x64/package.json')
+            require.resolve('@taiga-tech/figex-cli-win32-x64/package.json')
         )
         const expectedBinaryPath = path.join(
             pkgDir,
             'vendor',
             'x86_64-pc-windows-msvc',
-            'sample-cli',
-            'sample-cli.exe'
+            'figex-cli',
+            'figex-cli.exe'
         )
 
         expect(spawnSyncMock).toHaveBeenCalledWith(
@@ -224,7 +224,7 @@ describe('index launcher', () => {
     it('package 解決に失敗した場合はエラーメッセージを出して exit(1) する', async () => {
         // Given
         const { exitSpy, stderrWriteSpy } = setupLauncher({
-            packageName: '@taiga-tech/cli-package-not-installed',
+            packageName: '@taiga-tech/figex-cli-package-not-installed',
         })
 
         // When
@@ -233,7 +233,7 @@ describe('index launcher', () => {
         // Then
         expect(stderrWriteSpy).toHaveBeenCalledWith(
             expect.stringContaining(
-                'Failed to resolve package @taiga-tech/cli-package-not-installed. Is the platform package installed?'
+                'Failed to resolve package @taiga-tech/figex-cli-package-not-installed. Is the platform package installed?'
             )
         )
         expect(stderrWriteSpy).toHaveBeenCalledWith(
@@ -246,7 +246,7 @@ describe('index launcher', () => {
     it('spawnSync が error を返した場合はメッセージを出して exit(1) する', async () => {
         // Given
         const { exitSpy, stderrWriteSpy } = setupLauncher({
-            packageName: '@taiga-tech/cli-linux-x64-gnu',
+            packageName: '@taiga-tech/figex-cli-linux-x64-gnu',
             spawnResult: {
                 error: new Error('spawn failed'),
                 status: null,
@@ -258,14 +258,14 @@ describe('index launcher', () => {
 
         // Then
         const pkgDir = path.dirname(
-            require.resolve('@taiga-tech/cli-linux-x64-gnu/package.json')
+            require.resolve('@taiga-tech/figex-cli-linux-x64-gnu/package.json')
         )
         const expectedBinaryPath = path.join(
             pkgDir,
             'vendor',
             'x86_64-unknown-linux-gnu',
-            'sample-cli',
-            'sample-cli'
+            'figex-cli',
+            'figex-cli'
         )
         expect(stderrWriteSpy).toHaveBeenCalledWith(
             expect.stringContaining(
@@ -326,7 +326,7 @@ describe('index launcher', () => {
         // Given
         setupLauncher({
             libcFamily: 'musl',
-            packageName: '@taiga-tech/cli-linux-x64-musl',
+            packageName: '@taiga-tech/figex-cli-linux-x64-musl',
             spawnResult: { status: 0 },
             targetTriple: 'x86_64-unknown-linux-musl',
         })
@@ -351,7 +351,7 @@ describe('index launcher', () => {
         // Given
         setupLauncher({
             libcFamily: null,
-            packageName: '@taiga-tech/cli-linux-x64-musl',
+            packageName: '@taiga-tech/figex-cli-linux-x64-musl',
             spawnResult: { status: 0 },
             targetTriple: 'x86_64-unknown-linux-musl',
         })
@@ -375,7 +375,7 @@ describe('index launcher', () => {
     it('追加CLI引数がない場合は spawnSync に空配列を渡す', async () => {
         // Given
         setupLauncher({
-            argv: ['node', 'sample-cli'],
+            argv: ['node', 'figex-cli'],
             spawnResult: { status: 0 },
         })
 
@@ -384,14 +384,14 @@ describe('index launcher', () => {
 
         // Then
         const pkgDir = path.dirname(
-            require.resolve('@taiga-tech/cli-linux-x64-gnu/package.json')
+            require.resolve('@taiga-tech/figex-cli-linux-x64-gnu/package.json')
         )
         const expectedBinaryPath = path.join(
             pkgDir,
             'vendor',
             'x86_64-unknown-linux-gnu',
-            'sample-cli',
-            'sample-cli'
+            'figex-cli',
+            'figex-cli'
         )
         expect(spawnSyncMock).toHaveBeenCalledWith(expectedBinaryPath, [], {
             stdio: 'inherit',

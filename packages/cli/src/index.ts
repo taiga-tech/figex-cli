@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import { resolvePackageName, resolveTargetTriple } from './platform'
 
-const BINARY_NAME = 'sample-cli' as const
+const BINARY_NAME = 'figex-cli' as const
 
 function main(): void {
     const { platform, arch } = process

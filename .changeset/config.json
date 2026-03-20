@@ -5,12 +5,12 @@
     "fixed": [],
     "linked": [
         [
-            "@taiga-tech/cli",
-            "@taiga-tech/cli-darwin-arm64",
-            "@taiga-tech/cli-darwin-x64",
-            "@taiga-tech/cli-win32-x64",
-            "@taiga-tech/cli-linux-x64-gnu",
-            "@taiga-tech/cli-linux-x64-musl"
+            "@taiga-tech/figex-cli",
+            "@taiga-tech/figex-cli-darwin-arm64",
+            "@taiga-tech/figex-cli-darwin-x64",
+            "@taiga-tech/figex-cli-win32-x64",
+            "@taiga-tech/figex-cli-linux-x64-gnu",
+            "@taiga-tech/figex-cli-linux-x64-musl"
         ]
     ],
     "access": "public",

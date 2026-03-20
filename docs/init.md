@@ -36,13 +36,13 @@ Linux では glibc (gnu) と musl の両対応を行う。
 
 Codex 型構成を採用する。
 
-- 共通ランチャ: `@taiga-tech/cli`
+- 共通ランチャ: `@taiga-tech/figex-cli`
 - プラットフォーム別バイナリ同梱パッケージ:
-    - `@taiga-tech/cli-darwin-arm64`
-    - `@taiga-tech/cli-darwin-x64`
-    - `@taiga-tech/cli-win32-x64`
-    - `@taiga-tech/cli-linux-x64-gnu`
-    - `@taiga-tech/cli-linux-x64-musl`
+    - `@taiga-tech/figex-cli-darwin-arm64`
+    - `@taiga-tech/figex-cli-darwin-x64`
+    - `@taiga-tech/figex-cli-win32-x64`
+    - `@taiga-tech/figex-cli-linux-x64-gnu`
+    - `@taiga-tech/figex-cli-linux-x64-musl`
 
 ランチャは `optionalDependencies` として各プラットフォームパッケージを定義する。
 
@@ -107,7 +107,7 @@ vendor/
 
 ```
 {
-  "name": "@taiga-tech/cli-linux-x64-gnu",
+  "name": "@taiga-tech/figex-cli-linux-x64-gnu",
   "version": "0.1.0",
   "os": ["linux"],
   "cpu": ["x64"],
@@ -192,7 +192,7 @@ publish 順序は platform → launcher とする。
 ### 11.1 バージョニング
 
 - バージョニングはセマンティックバージョニング（SemVer）に従う。
-- すべての npm パッケージ（ランチャおよびプラットフォーム別パッケージ）は同一バージョンで運用する（例: `@taiga-tech/cli@1.2.3` と `@taiga-tech/cli-linux-x64-gnu@1.2.3`）。
+- すべての npm パッケージ（ランチャおよびプラットフォーム別パッケージ）は同一バージョンで運用する（例: `@taiga-tech/figex-cli@1.2.3` と `@taiga-tech/figex-cli-linux-x64-gnu@1.2.3`）。
 
 ### 11.2 変更管理（Changesets）
 
@@ -201,7 +201,7 @@ publish 順序は platform → launcher とする。
 
 ### 11.3 リリース順序
 
-- プラットフォーム別パッケージを先に publish し、その後にランチャ（`@taiga-tech/cli`）を publish する。
+- プラットフォーム別パッケージを先に publish し、その後にランチャ（`@taiga-tech/figex-cli`）を publish する。
 - Changesets のリリース手順においても、この publish 順序を満たすよう CI を構成する。
 
 以上を本プロジェクトの配布仕様とする。

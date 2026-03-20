@@ -1,7 +1,7 @@
 {
-    "name": "@taiga-tech/cli-darwin-arm64",
+    "name": "@taiga-tech/figex-cli-darwin-arm64",
     "version": "0.1.0",
-    "description": "macOS arm64 binary for @taiga-tech/cli",
+    "description": "macOS arm64 binary for @taiga-tech/figex-cli",
     "os": [
         "darwin"
     ],

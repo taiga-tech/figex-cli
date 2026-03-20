@@ -1,3 +1,3 @@
 pub fn greet() -> String {
-    "Hello from sample-cli-core!".to_string()
+    "Hello from figex-cli-core!".to_string()
 }

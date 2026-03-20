@@ -120,19 +120,19 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@24.11.0)
     optionalDependencies:
-      '@taiga-tech/cli-darwin-arm64':
+      '@taiga-tech/figex-cli-darwin-arm64':
         specifier: workspace:*
         version: link:../cli-darwin-arm64
-      '@taiga-tech/cli-darwin-x64':
+      '@taiga-tech/figex-cli-darwin-x64':
         specifier: workspace:*
         version: link:../cli-darwin-x64
-      '@taiga-tech/cli-linux-x64-gnu':
+      '@taiga-tech/figex-cli-linux-x64-gnu':
         specifier: workspace:*
         version: link:../cli-linux-x64-gnu
-      '@taiga-tech/cli-linux-x64-musl':
+      '@taiga-tech/figex-cli-linux-x64-musl':
         specifier: workspace:*
         version: link:../cli-linux-x64-musl
-      '@taiga-tech/cli-win32-x64':
+      '@taiga-tech/figex-cli-win32-x64':
         specifier: workspace:*
         version: link:../cli-win32-x64
 

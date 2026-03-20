@@ -1,7 +1,7 @@
 {
-    "name": "@taiga-tech/cli-linux-x64-musl",
+    "name": "@taiga-tech/figex-cli-linux-x64-musl",
     "version": "0.1.0",
-    "description": "Linux x64 musl binary for @taiga-tech/cli",
+    "description": "Linux x64 musl binary for @taiga-tech/figex-cli",
     "os": [
         "linux"
     ],

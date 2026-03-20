@@ -1,9 +1,9 @@
 {
-    "name": "@taiga-tech/cli",
+    "name": "@taiga-tech/figex-cli",
     "version": "0.1.0",
-    "description": "CLI launcher for sample-cli",
+    "description": "CLI launcher for figex-cli",
     "bin": {
-        "sample-cli": "./dist/index.cjs"
+        "figex": "./dist/index.cjs"
     },
     "files": [
         "dist/**"
@@ -18,11 +18,11 @@
         "detect-libc": "^2.0.4"
     },
     "optionalDependencies": {
-        "@taiga-tech/cli-darwin-arm64": "workspace:*",
-        "@taiga-tech/cli-darwin-x64": "workspace:*",
-        "@taiga-tech/cli-linux-x64-gnu": "workspace:*",
-        "@taiga-tech/cli-linux-x64-musl": "workspace:*",
-        "@taiga-tech/cli-win32-x64": "workspace:*"
+        "@taiga-tech/figex-cli-darwin-arm64": "workspace:*",
+        "@taiga-tech/figex-cli-darwin-x64": "workspace:*",
+        "@taiga-tech/figex-cli-linux-x64-gnu": "workspace:*",
+        "@taiga-tech/figex-cli-linux-x64-musl": "workspace:*",
+        "@taiga-tech/figex-cli-win32-x64": "workspace:*"
     },
     "devDependencies": {
         "@types/node": "^24.0.0",

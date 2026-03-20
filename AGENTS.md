@@ -3,9 +3,9 @@
 ## プロジェクト構成とモジュール
 
 - `crates/core`: Rust のコアライブラリ。
-- `crates/cli`: Rust バイナリ本体（`sample-cli` のエントリポイント）。
+- `crates/cli`: Rust バイナリ本体（`figex-cli` のエントリポイント）。
 - `packages/cli`: TypeScript 製ランチャー。プラットフォーム別パッケージを解決してネイティブバイナリを実行。
-- `packages/cli-<platform>`: プラットフォーム別 npm パッケージ。`vendor/<target-triple>/sample-cli/` にバイナリを格納。
+- `packages/cli-<platform>`: プラットフォーム別 npm パッケージ。`vendor/<target-triple>/figex-cli/` にバイナリを格納。
 - `apps/web`, `apps/docs`: モノレポ内の Next.js アプリ（CLI 実行には必須ではない）。
 - `scripts/place-binary-like-ci.sh`: CI と同じ配置規約でバイナリを配置するローカル補助スクリプト。
 
@@ -22,7 +22,7 @@
 
 必要に応じて直接実行:
 
-- `pnpm --filter @taiga-tech/cli run build`
+- `pnpm --filter @taiga-tech/figex-cli run build`
 - `node packages/cli/dist/index.cjs`
 - `scripts/place-binary-like-ci.sh --build`
 
@@ -31,7 +31,7 @@
 - TypeScript: strict モード、インデント 4 スペース、シングルクォート、テスト名は `*.test.ts`。
 - Rust: `cargo fmt` で整形、`cargo clippy --all-targets --all-features -- -D warnings` で lint。
 - フォーマット: `mise run format` を使用（Prettier + `cargo fmt`）。
-- パッケージ命名: プラットフォーム別は `@taiga-tech/cli-*`。ターゲットマッピングはコード上で明示。
+- パッケージ命名: プラットフォーム別は `@taiga-tech/figex-cli-*`。ターゲットマッピングはコード上で明示。
 
 ## テスト方針
 
@@ -42,6 +42,7 @@
 ## コミット・PR ガイド
 
 - コミットは Conventional Commits 準拠（例: `feat:`, `fix:`, `refactor:`）。
+- コミットメッセージは日本語で、1コミット1目的を意識。特に配布やプラットフォーム関連の変更は理由を明記。
 - 1コミット1目的を意識し、特に配布・プラットフォーム変更は理由を明記。
 - PR には以下を記載:
 - 変更内容と目的

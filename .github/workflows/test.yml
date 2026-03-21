@@ -11,67 +11,6 @@ permissions:
   contents: read
 
 jobs:
-  coverage-comment:
-    name: Coverage Comment
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: jdx/mise-action@v4
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run JS coverage
-        run: pnpm --filter @taiga-tech/figex-cli run test:coverage
-
-      - name: Run Rust coverage
-        run: |
-          cargo llvm-cov --version || cargo install cargo-llvm-cov --locked
-          rustup component add llvm-tools-preview
-          cargo llvm-cov --workspace --no-report
-          cargo llvm-cov report \
-            --ignore-filename-regex logo_assets.rs \
-            --json --summary-only \
-            --output-path target/rust-coverage-summary.json
-
-      - name: Format coverage comment
-        id: format
-        run: |
-          RUST_LINES=$(jq '.data[0].totals.lines.percent' target/rust-coverage-summary.json)
-          RUST_FUNCS=$(jq '.data[0].totals.functions.percent' target/rust-coverage-summary.json)
-          RUST_REGIONS=$(jq '.data[0].totals.regions.percent' target/rust-coverage-summary.json)
-
-          JS_LINES=$(jq '.total.lines.pct' packages/cli/coverage/coverage-summary.json)
-          JS_FUNCS=$(jq '.total.functions.pct' packages/cli/coverage/coverage-summary.json)
-          JS_BRANCHES=$(jq '.total.branches.pct' packages/cli/coverage/coverage-summary.json)
-
-          fmt() { printf "%.1f%%" "$1"; }
-
-          {
-            echo 'body<<__COVERAGE__'
-            echo "## Coverage Report"
-            echo ""
-            echo "| | Lines | Functions | Branches / Regions |"
-            echo "|---|---|---|---|"
-            echo "| **Rust** | $(fmt $RUST_LINES) | $(fmt $RUST_FUNCS) | $(fmt $RUST_REGIONS) |"
-            echo "| **TypeScript** | $(fmt $JS_LINES) | $(fmt $JS_FUNCS) | $(fmt $JS_BRANCHES) |"
-            echo ""
-            echo "_Commit: \`${{ github.sha }}\`_"
-            echo '__COVERAGE__'
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Post or update coverage comment
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: coverage-report
-          message: ${{ steps.format.outputs.body }}
-
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -94,13 +33,91 @@ jobs:
       - name: Run tests with coverage
         run: mise run test-coverage
 
+      - name: Export Rust coverage summary as JSON
+        if: always()
+        run: cargo llvm-cov report --ignore-filename-regex logo_assets.rs --json --summary-only --output-path target/rust-coverage-summary.json
+
       - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v6
         with:
           name: coverage-${{ matrix.os }}-${{ github.run_id }}
           path: |
-            packages/cli/coverage
-            target/rust.lcov
+            packages/cli/coverage/coverage-summary.json
+            target/rust-coverage-summary.json
           if-no-files-found: warn
           retention-days: 14
+
+  coverage-comment:
+    name: Coverage Comment
+    needs: test
+    if: github.event_name == 'pull_request' && (needs.test.result == 'success' || needs.test.result == 'failure')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Download Ubuntu coverage
+        uses: actions/download-artifact@v6
+        with:
+          name: coverage-ubuntu-latest-${{ github.run_id }}
+          path: coverage/ubuntu
+
+      - name: Download macOS coverage
+        uses: actions/download-artifact@v6
+        with:
+          name: coverage-macos-latest-${{ github.run_id }}
+          path: coverage/macos
+
+      - name: Download Windows coverage
+        uses: actions/download-artifact@v6
+        with:
+          name: coverage-windows-latest-${{ github.run_id }}
+          path: coverage/windows
+
+      - name: Format coverage comment
+        id: format
+        run: |
+          fmt() { printf "%.1f%%" "$1"; }
+
+          rust_metric() { jq "$2" "coverage/$1/target/rust-coverage-summary.json"; }
+          js_metric()   { jq "$2" "coverage/$1/packages/cli/coverage/coverage-summary.json"; }
+
+          {
+            echo 'body<<__COVERAGE__'
+            echo "## Coverage Report"
+            echo ""
+            echo "### Rust"
+            echo ""
+            echo "| OS | Lines | Functions | Regions |"
+            echo "|---|---|---|---|"
+            for os in ubuntu macos windows; do
+              label=$(echo "$os" | sed 's/ubuntu/Ubuntu/;s/macos/macOS/;s/windows/Windows/')
+              rl=$(rust_metric $os '.data[0].totals.lines.percent')
+              rf=$(rust_metric $os '.data[0].totals.functions.percent')
+              rr=$(rust_metric $os '.data[0].totals.regions.percent')
+              echo "| $label | $(fmt $rl) | $(fmt $rf) | $(fmt $rr) |"
+            done
+            echo ""
+            echo "### TypeScript"
+            echo ""
+            echo "| OS | Lines | Functions | Branches |"
+            echo "|---|---|---|---|"
+            for os in ubuntu macos windows; do
+              label=$(echo "$os" | sed 's/ubuntu/Ubuntu/;s/macos/macOS/;s/windows/Windows/')
+              jl=$(js_metric $os '.total.lines.pct')
+              jf=$(js_metric $os '.total.functions.pct')
+              jb=$(js_metric $os '.total.branches.pct')
+              echo "| $label | $(fmt $jl) | $(fmt $jf) | $(fmt $jb) |"
+            done
+            echo ""
+            echo "_Commit: \`${{ github.sha }}\`_"
+            echo '__COVERAGE__'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Post or update coverage comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: coverage-report
+          message: ${{ steps.format.outputs.body }}

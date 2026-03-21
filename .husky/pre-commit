@@ -1,0 +1,8 @@
+pnpm run lint
+pnpm exec lint-staged
+
+# Rust ファイルが staged にある場合のみ Rust チェックを実行
+if git diff --cached --name-only | grep -q '\.rs$'; then
+  cargo fmt --check
+  cargo clippy --all-targets --all-features -- -D warnings
+fi

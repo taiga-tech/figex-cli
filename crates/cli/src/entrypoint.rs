@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::process::ExitCode;
 
 use crate::cli::Cli;
 use figex_cli_core::FigexError;
@@ -35,4 +36,15 @@ where
             )
         }
     }
+}
+
+#[doc(hidden)]
+#[inline(never)]
+pub fn run_with_status<W, R>(cli: Cli, runner: R, stderr: &mut W) -> ExitCode
+where
+    W: Write,
+    R: FnOnce(Cli) -> anyhow::Result<()>,
+{
+    run_with_exit_code(cli, runner, stderr)
+        .map_or(ExitCode::SUCCESS, |code| ExitCode::from(code as u8))
 }

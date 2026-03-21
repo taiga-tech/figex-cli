@@ -51,7 +51,7 @@ jobs:
   coverage-comment:
     name: Coverage Comment
     needs: test
-    if: github.event_name == 'pull_request' && (needs.test.result == 'success' || needs.test.result == 'failure')
+    if: ${{ always() && github.event_name == 'pull_request' && (needs.test.result == 'success' || needs.test.result == 'failure') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

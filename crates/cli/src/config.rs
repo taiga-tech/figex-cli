@@ -146,7 +146,13 @@ pub fn find_config_file(start: &Path) -> Option<PathBuf> {
 /// read/parse error (missing file is not treated as fatal here).
 pub fn load_file_config(path: &Path) -> FileConfig {
     match std::fs::read_to_string(path) {
-        Ok(content) => toml::from_str(&content).unwrap_or_default(),
+        Ok(content) => match toml::from_str(&content) {
+            Ok(cfg) => cfg,
+            Err(e) => {
+                eprintln!("warning: failed to parse {}: {e}", path.display());
+                FileConfig::default()
+            }
+        },
         Err(_) => FileConfig::default(),
     }
 }
@@ -154,6 +160,14 @@ pub fn load_file_config(path: &Path) -> FileConfig {
 // ---------------------------------------------------------------------------
 // Resolution
 // ---------------------------------------------------------------------------
+
+fn parse_bool_str(s: &str) -> bool {
+    matches!(s, "1" | "true")
+}
+
+fn parse_bool_env(v: Option<String>) -> bool {
+    v.is_some_and(|s| parse_bool_str(&s))
+}
 
 /// Resolve settings from all sources using the defined priority order.
 ///
@@ -170,14 +184,19 @@ where
     let nrm = file.and_then(|f| f.normalizer.as_ref());
 
     Settings {
-        // json: CLI only (not in file / env)
-        json: cli.json,
+        // json: CLI > env > default
+        json: cli.json || parse_bool_env(env_fn("FIGEX_JSON")),
 
-        // pretty: CLI > file > default
-        pretty: if cli.pretty {
-            true
-        } else {
-            out.and_then(|o| o.pretty).unwrap_or(defaults.pretty)
+        // pretty: CLI > env > file > default
+        pretty: {
+            let env_pretty = env_fn("FIGEX_PRETTY");
+            if cli.pretty {
+                true
+            } else if let Some(v) = env_pretty {
+                parse_bool_str(&v)
+            } else {
+                out.and_then(|o| o.pretty).unwrap_or(defaults.pretty)
+            }
         },
 
         // log_level: CLI > env > default

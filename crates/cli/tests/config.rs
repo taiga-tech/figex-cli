@@ -265,6 +265,71 @@ fn find_config_file_discovers_nearest_parent_config() {
     assert_eq!(discovered, Some(config_path));
 }
 
+// ---------------------------------------------------------------------------
+// FIGEX_JSON / FIGEX_PRETTY env vars
+// ---------------------------------------------------------------------------
+
+#[test]
+fn env_var_figex_json_true_enables_json() {
+    let env = env_map(&[("FIGEX_JSON", "true")]);
+    let s = resolve_settings(&CliOverrides::default(), env, None);
+    assert!(s.json);
+}
+
+#[test]
+fn env_var_figex_json_1_enables_json() {
+    let env = env_map(&[("FIGEX_JSON", "1")]);
+    let s = resolve_settings(&CliOverrides::default(), env, None);
+    assert!(s.json);
+}
+
+#[test]
+fn env_var_figex_json_false_keeps_json_off() {
+    let env = env_map(&[("FIGEX_JSON", "false")]);
+    let s = resolve_settings(&CliOverrides::default(), env, None);
+    assert!(!s.json);
+}
+
+#[test]
+fn env_var_figex_pretty_false_disables_pretty() {
+    let env = env_map(&[("FIGEX_PRETTY", "false")]);
+    let s = resolve_settings(&CliOverrides::default(), env, None);
+    assert!(!s.pretty);
+}
+
+#[test]
+fn env_var_figex_pretty_0_disables_pretty() {
+    let env = env_map(&[("FIGEX_PRETTY", "0")]);
+    let s = resolve_settings(&CliOverrides::default(), env, None);
+    assert!(!s.pretty);
+}
+
+#[test]
+fn env_var_figex_pretty_overrides_file_config() {
+    let file = FileConfig {
+        output: Some(OutputFileConfig {
+            pretty: Some(true),
+            ..OutputFileConfig::default()
+        }),
+        ..FileConfig::default()
+    };
+    let env = env_map(&[("FIGEX_PRETTY", "false")]);
+    let s = resolve_settings(&CliOverrides::default(), env, Some(&file));
+    assert!(!s.pretty);
+}
+
+#[test]
+fn cli_pretty_flag_takes_priority_over_env_pretty_false() {
+    let env = env_map(&[("FIGEX_PRETTY", "false")]);
+    let cli = CliOverrides {
+        pretty: true,
+        ..CliOverrides::default()
+    };
+    let s = resolve_settings(&cli, env, None);
+    assert!(s.pretty);
+}
+
+// ---------------------------------------------------------------------------
 #[test]
 fn load_file_config_reads_valid_toml() {
     let temp_dir = TempDir::new("figex-config-load");
@@ -297,6 +362,21 @@ fn load_file_config_returns_default_for_missing_file() {
     let missing_path = temp_dir.path.join("missing.toml");
 
     let config = load_file_config(&missing_path);
+
+    assert!(config.runtime.is_none());
+    assert!(config.output.is_none());
+    assert!(config.classifier.is_none());
+    assert!(config.normalizer.is_none());
+}
+
+#[test]
+fn load_file_config_returns_default_for_invalid_toml() {
+    let temp_dir = TempDir::new("figex-config-invalid");
+    let config_path = temp_dir.path.join("figex.toml");
+    fs::write(&config_path, "[runtime\ntransport = \"mcp\"\n")
+        .expect("invalid config file should be written");
+
+    let config = load_file_config(&config_path);
 
     assert!(config.runtime.is_none());
     assert!(config.output.is_none());

@@ -69,8 +69,8 @@ pub fn run_io_with_logo(
 // Settings construction
 // ---------------------------------------------------------------------------
 
+// `pub` so that integration tests in tests/ can call these directly.
 #[doc(hidden)]
-#[inline(never)]
 pub fn build_settings(cli: &Cli) -> Settings {
     let overrides = CliOverrides {
         json: cli.json,
@@ -98,7 +98,6 @@ pub fn build_settings(cli: &Cli) -> Settings {
 }
 
 #[doc(hidden)]
-#[inline(never)]
 pub fn transport_to_str(t: &Transport) -> String {
     match t {
         Transport::Cdp => "cdp".to_string(),
@@ -108,7 +107,6 @@ pub fn transport_to_str(t: &Transport) -> String {
 }
 
 #[doc(hidden)]
-#[inline(never)]
 pub fn log_level_to_str(l: &LogLevel) -> String {
     match l {
         LogLevel::Error => "error".to_string(),

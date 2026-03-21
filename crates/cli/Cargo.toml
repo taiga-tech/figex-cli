@@ -15,3 +15,5 @@ figex-cli-core = { path = "../core" }
 figlet-rs = "1.0.0"
 owo-colors = "4.3.0"
 rust-embed = "8.11.0"
+serde = { version = "1", features = ["derive"] }
+toml = "0.9.8"

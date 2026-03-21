@@ -1,75 +1,149 @@
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
+
+// ---------------------------------------------------------------------------
+// Value enums
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, ValueEnum)]
+pub enum Transport {
+    Cdp,
+    Mcp,
+    Auto,
+}
+
+#[derive(Debug, Clone, ValueEnum)]
+pub enum LogLevel {
+    Error,
+    Warn,
+    Info,
+    Debug,
+    Trace,
+}
+
+// ---------------------------------------------------------------------------
+// Root CLI
+// ---------------------------------------------------------------------------
 
 #[derive(Parser)]
 #[command(name = "figex", about = "Figma extraction CLI", version)]
 pub struct Cli {
-    /// Enable verbose output
-    #[arg(short, long, global = true)]
-    pub verbose: bool,
+    /// Output as JSON
+    #[arg(long, global = true)]
+    pub json: bool,
 
-    /// Path to config file [default: ~/.config/figex/config.json]
-    #[arg(short, long, global = true, value_name = "PATH")]
+    /// Pretty-print output
+    #[arg(long, global = true)]
+    pub pretty: bool,
+
+    /// Connection timeout in milliseconds
+    #[arg(long, global = true, value_name = "MS")]
+    pub timeout_ms: Option<u64>,
+
+    /// Transport type [cdp|mcp|auto]
+    #[arg(long, global = true, value_enum, value_name = "TYPE")]
+    pub transport: Option<Transport>,
+
+    /// Host to connect to
+    #[arg(long, global = true, value_name = "HOST")]
+    pub host: Option<String>,
+
+    /// Port to connect to
+    #[arg(long, global = true, value_name = "PORT")]
+    pub port: Option<u16>,
+
+    /// Path to config file [default: figex.toml]
+    #[arg(long, global = true, value_name = "PATH")]
     pub config: Option<PathBuf>,
+
+    /// Log level [error|warn|info|debug|trace]
+    #[arg(long, global = true, value_enum, value_name = "LEVEL")]
+    pub log_level: Option<LogLevel>,
 
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
 
+// ---------------------------------------------------------------------------
+// Subcommands
+// ---------------------------------------------------------------------------
+
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Connect to Figma Desktop runtime and establish a session
+    /// Connect to Figma Desktop runtime and verify the session
     Attach,
 
-    /// Diagnose the connection environment (Figma running, patch applied, etc.)
+    /// Diagnose the connection environment (port discovery, ping, snapshot check)
     Doctor,
 
-    /// Preview frame overview (node count, complexity, etc.)
+    /// Preview frame metadata (node count, text count, etc.)
     Inspect {
-        /// Frame ID or name to inspect
-        frame: String,
+        #[command(subcommand)]
+        subcommand: InspectSubcommand,
     },
 
-    /// Extract raw frame info and save as raw.json
+    /// Extract raw snapshot from a frame and save to raw.json
     Extract {
-        /// Frame ID or name to extract
-        frame: String,
-
-        /// Output file path [default: raw.json]
-        #[arg(short, long, value_name = "PATH")]
-        output: Option<PathBuf>,
+        #[command(subcommand)]
+        subcommand: ExtractSubcommand,
     },
 
-    /// Generate features.json from extracted raw info
+    /// Build features.json from raw.json
     Features {
-        /// Input raw.json file [default: raw.json]
+        /// Input file [default: raw.json]
         #[arg(short, long, value_name = "PATH")]
         input: Option<PathBuf>,
 
-        /// Output file path [default: features.json]
+        /// Output file [default: features.json]
         #[arg(short, long, value_name = "PATH")]
         output: Option<PathBuf>,
     },
 
-    /// Normalize to UI IR and generate ui.ir.json
+    /// Build ui.ir.json from features.json
     Normalize {
-        /// Input features.json file [default: features.json]
+        /// Input file [default: features.json]
         #[arg(short, long, value_name = "PATH")]
         input: Option<PathBuf>,
 
-        /// Output file path [default: ui.ir.json]
+        /// Output file [default: ui.ir.json]
         #[arg(short, long, value_name = "PATH")]
         output: Option<PathBuf>,
     },
 
-    /// Output a human-readable analysis report (report.md)
+    /// Build report.md from ui.ir.json
     Report {
-        /// Input ui.ir.json file [default: ui.ir.json]
+        /// Input file [default: ui.ir.json]
         #[arg(short, long, value_name = "PATH")]
         input: Option<PathBuf>,
 
-        /// Output file path [default: report.md]
+        /// Output file [default: report.md]
+        #[arg(short, long, value_name = "PATH")]
+        output: Option<PathBuf>,
+    },
+}
+
+// ---------------------------------------------------------------------------
+// Nested subcommands
+// ---------------------------------------------------------------------------
+
+#[derive(Subcommand)]
+pub enum InspectSubcommand {
+    /// Show metadata for a frame (node count, text count, layout count, etc.)
+    Frame {
+        /// Frame reference: id, deep link, or selection alias
+        frame_ref: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum ExtractSubcommand {
+    /// Extract raw snapshot for a frame
+    Frame {
+        /// Frame reference: id, deep link, or selection alias
+        frame_ref: String,
+
+        /// Output file [default: raw.json]
         #[arg(short, long, value_name = "PATH")]
         output: Option<PathBuf>,
     },

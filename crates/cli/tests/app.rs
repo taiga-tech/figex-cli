@@ -1,15 +1,16 @@
 #[path = "support/failing_writer.rs"]
 mod failing_writer;
 
-use std::path::PathBuf;
-
 use clap::Parser;
-use figex_cli::app::{config_dir_with_base, run_io, run_io_with_logo, AppContext};
+use figex_cli::app::{
+    build_settings, log_level_to_str, run_io, run_io_with_logo, transport_to_str,
+};
 use figex_cli::cli::Cli;
+use figex_cli::cli::{LogLevel, Transport};
 use std::io;
 
 fn make_cli(args: &[&str]) -> Cli {
-    Cli::try_parse_from(std::iter::once("figex-cli").chain(args.iter().copied()))
+    Cli::try_parse_from(std::iter::once("figex").chain(args.iter().copied()))
         .expect("args should parse successfully")
 }
 
@@ -82,8 +83,6 @@ fn logo_error_propagates_stderr_write_failure() {
 
 #[test]
 fn logo_error_then_stdout_write_failure_propagates() {
-    // Logo fails → stderr write OK → writeln!(stdout, "help hint")? fails
-    // Covers the ? error branch on the None arm of the cli.command match
     let mut stdout = failing_writer::FailingWriter;
     let mut stderr = Vec::new();
 
@@ -137,34 +136,42 @@ fn subcommand_doctor_runs_without_error() {
 }
 
 #[test]
-fn subcommand_inspect_runs_without_error() {
+fn subcommand_inspect_frame_runs_without_error() {
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    run_io(make_cli(&["inspect", "my-frame"]), &mut stdout, &mut stderr)
-        .expect("inspect should succeed");
+    run_io(
+        make_cli(&["inspect", "frame", "my-frame"]),
+        &mut stdout,
+        &mut stderr,
+    )
+    .expect("inspect frame should succeed");
     assert!(stderr.is_empty());
 }
 
 // extract: output None / Some
 #[test]
-fn subcommand_extract_default_output() {
+fn subcommand_extract_frame_default_output() {
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    run_io(make_cli(&["extract", "my-frame"]), &mut stdout, &mut stderr)
-        .expect("extract should succeed");
+    run_io(
+        make_cli(&["extract", "frame", "my-frame"]),
+        &mut stdout,
+        &mut stderr,
+    )
+    .expect("extract frame should succeed");
     assert!(stderr.is_empty());
 }
 
 #[test]
-fn subcommand_extract_custom_output() {
+fn subcommand_extract_frame_custom_output() {
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
     run_io(
-        make_cli(&["extract", "my-frame", "--output", "out.json"]),
+        make_cli(&["extract", "frame", "my-frame", "--output", "out.json"]),
         &mut stdout,
         &mut stderr,
     )
-    .expect("extract with output should succeed");
+    .expect("extract frame with output should succeed");
     assert!(stderr.is_empty());
 }
 
@@ -214,40 +221,7 @@ fn subcommand_normalize_custom_io() {
     assert!(stderr.is_empty());
 }
 
-// ---------------------------------------------------------------------------
-// AppContext and config path helpers
-// ---------------------------------------------------------------------------
-
-#[test]
-fn config_dir_with_base_uses_provided_path() {
-    let result = config_dir_with_base(Some(PathBuf::from("/custom")));
-    assert_eq!(result, PathBuf::from("/custom/figex/config.json"));
-}
-
-#[test]
-fn config_dir_with_base_falls_back_to_dot_when_none() {
-    let result = config_dir_with_base(None);
-    assert_eq!(result, PathBuf::from("./figex/config.json"));
-}
-
-#[test]
-fn app_context_uses_explicit_config_path() {
-    let ctx = AppContext::new(true, Some(PathBuf::from("/custom/config.json")));
-    assert_eq!(ctx.config_path, PathBuf::from("/custom/config.json"));
-    assert!(ctx.verbose);
-}
-
-#[test]
-fn app_context_defaults_to_config_dir_when_none() {
-    let ctx = AppContext::new(false, None);
-    assert!(ctx.config_path.ends_with("figex/config.json"));
-    assert!(!ctx.verbose);
-}
-
-// ---------------------------------------------------------------------------
 // report: input None / Some, output None / Some
-// ---------------------------------------------------------------------------
-
 #[test]
 fn subcommand_report_default_io() {
     let mut stdout = Vec::new();
@@ -267,4 +241,135 @@ fn subcommand_report_custom_io() {
     )
     .expect("report custom should succeed");
     assert!(stderr.is_empty());
+}
+
+// ---------------------------------------------------------------------------
+// Global options — parsing
+// ---------------------------------------------------------------------------
+
+#[test]
+fn global_option_json_is_parsed() {
+    let cli = make_cli(&["--json", "attach"]);
+    assert!(cli.json);
+}
+
+#[test]
+fn global_option_pretty_is_parsed() {
+    let cli = make_cli(&["--pretty", "attach"]);
+    assert!(cli.pretty);
+}
+
+#[test]
+fn global_option_timeout_ms_is_parsed() {
+    let cli = make_cli(&["--timeout-ms", "3000", "attach"]);
+    assert_eq!(cli.timeout_ms, Some(3000));
+}
+
+#[test]
+fn global_option_transport_cdp_is_parsed() {
+    use figex_cli::cli::Transport;
+    let cli = make_cli(&["--transport", "cdp", "attach"]);
+    assert!(matches!(cli.transport, Some(Transport::Cdp)));
+}
+
+#[test]
+fn global_option_transport_mcp_is_parsed() {
+    use figex_cli::cli::Transport;
+    let cli = make_cli(&["--transport", "mcp", "attach"]);
+    assert!(matches!(cli.transport, Some(Transport::Mcp)));
+}
+
+#[test]
+fn global_option_transport_auto_is_parsed() {
+    use figex_cli::cli::Transport;
+    let cli = make_cli(&["--transport", "auto", "attach"]);
+    assert!(matches!(cli.transport, Some(Transport::Auto)));
+}
+
+#[test]
+fn global_option_host_is_parsed() {
+    let cli = make_cli(&["--host", "192.168.1.1", "attach"]);
+    assert_eq!(cli.host.as_deref(), Some("192.168.1.1"));
+}
+
+#[test]
+fn global_option_port_is_parsed() {
+    let cli = make_cli(&["--port", "9999", "attach"]);
+    assert_eq!(cli.port, Some(9999));
+}
+
+#[test]
+fn global_option_log_level_debug_is_parsed() {
+    use figex_cli::cli::LogLevel;
+    let cli = make_cli(&["--log-level", "debug", "attach"]);
+    assert!(matches!(cli.log_level, Some(LogLevel::Debug)));
+}
+
+#[test]
+fn global_option_config_is_parsed() {
+    let cli = make_cli(&["--config", "/tmp/figex.toml", "attach"]);
+    assert_eq!(
+        cli.config.as_deref(),
+        Some(std::path::Path::new("/tmp/figex.toml"))
+    );
+}
+
+#[test]
+fn build_settings_maps_all_transport_variants() {
+    let missing_config = std::env::temp_dir().join(format!(
+        "figex-missing-config-{}-transport.toml",
+        std::process::id()
+    ));
+    let missing_config = missing_config.to_string_lossy().into_owned();
+
+    for (transport, expected) in [("cdp", "cdp"), ("mcp", "mcp"), ("auto", "auto")] {
+        let cli = make_cli(&["--config", &missing_config, "--transport", transport]);
+        let settings = build_settings(&cli);
+        assert_eq!(settings.transport, expected);
+    }
+}
+
+#[test]
+fn build_settings_maps_all_log_levels() {
+    let missing_config = std::env::temp_dir().join(format!(
+        "figex-missing-config-{}-log-level.toml",
+        std::process::id()
+    ));
+    let missing_config = missing_config.to_string_lossy().into_owned();
+
+    for (level, expected) in [
+        ("error", "error"),
+        ("warn", "warn"),
+        ("info", "info"),
+        ("debug", "debug"),
+        ("trace", "trace"),
+    ] {
+        let cli = make_cli(&["--config", &missing_config, "--log-level", level]);
+        let settings = build_settings(&cli);
+        assert_eq!(settings.log_level, expected);
+    }
+}
+
+#[test]
+fn transport_to_str_maps_all_variants() {
+    for (transport, expected) in [
+        (Transport::Cdp, "cdp"),
+        (Transport::Mcp, "mcp"),
+        (Transport::Auto, "auto"),
+    ] {
+        assert_eq!(transport_to_str(&transport), expected);
+    }
+}
+
+#[test]
+fn log_level_to_str_maps_all_variants() {
+    for (level, expected) in [
+        (LogLevel::Error, "error"),
+        (LogLevel::Warn, "warn"),
+        (LogLevel::Info, "info"),
+        (LogLevel::Debug, "debug"),
+        (LogLevel::Trace, "trace"),
+    ] {
+        assert_eq!(log_level_to_str(&level), expected);
+    }
 }

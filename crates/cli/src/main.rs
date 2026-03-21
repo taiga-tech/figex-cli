@@ -1,8 +1,9 @@
-use std::io;
+use anyhow::Result;
+use clap::Parser;
 
-fn main() -> io::Result<()> {
-    let mut stdout = io::stdout();
-    let mut stderr = io::stderr();
+use figex_cli::cli::Cli;
 
-    figex_cli::app::run(&mut stdout, &mut stderr)
+fn main() -> Result<()> {
+    let cli = Cli::parse();
+    figex_cli::app::run(cli)
 }

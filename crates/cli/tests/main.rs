@@ -2,19 +2,14 @@
 mod run_figex_cli;
 
 #[test]
-fn figex_cli_prints_greeting_and_exits_successfully() {
+fn figex_cli_runs_and_exits_successfully() {
     // Given
     // When
     let output = run_figex_cli::run_figex_cli();
 
     // Then
     assert!(output.status.success());
-    assert!(
-        String::from_utf8(output.stdout)
-            .expect("stdout should be valid UTF-8")
-            .contains("Hello from figex-cli-core!"),
-        "stdout should contain greeting message"
-    );
+    assert!(!output.stdout.is_empty(), "stdout should not be empty");
 }
 
 #[test]

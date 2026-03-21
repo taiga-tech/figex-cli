@@ -54,8 +54,8 @@ run = [
   "cargo llvm-cov --version || cargo install cargo-llvm-cov --locked",
   "rustup component add llvm-tools-preview",
   "cargo llvm-cov --workspace --no-report",
-  "cargo llvm-cov report --lcov --summary-only --output-path target/rust.lcov --ignore-filename-regex 'logo_assets\\.rs$'",
-  "cargo llvm-cov report --ignore-filename-regex 'logo_assets\\.rs$' --fail-under-functions 100 --fail-under-lines 100 --fail-under-regions 100",
+  "cargo llvm-cov report --lcov --summary-only --output-path target/rust.lcov --ignore-filename-regex logo_assets.rs",
+  "cargo llvm-cov report --ignore-filename-regex logo_assets.rs --fail-under-functions 100 --fail-under-lines 100 --fail-under-regions 100",
 ]
 
 [tasks.test-coverage]

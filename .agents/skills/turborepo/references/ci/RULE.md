@@ -47,7 +47,7 @@ This requires Git history to compute what changed.
 
 ```yaml
 # GitHub Actions
-- uses: actions/checkout@v4
+- uses: actions/checkout@v6
   with:
       fetch-depth: 2 # Minimum for --affected
       # Use 0 for full history if merge base is far

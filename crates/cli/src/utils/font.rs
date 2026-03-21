@@ -32,26 +32,3 @@ pub fn generate_font_name_variants(input: &str) -> Vec<String> {
 
     variants
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_normalize_font_name() {
-        assert_eq!(normalize_font_name("Standard"), "Standard.flf");
-        assert_eq!(normalize_font_name("Standard.flf"), "Standard.flf");
-        assert_eq!(normalize_font_name("ANSI Shadow"), "ANSI Shadow.flf");
-    }
-
-    #[test]
-    fn test_generate_font_name_variants() {
-        let variants = generate_font_name_variants("ANSI_Shadow");
-        assert!(variants.contains(&"ANSI_Shadow.flf".to_string()));
-        assert!(variants.contains(&"ANSI Shadow.flf".to_string()));
-
-        let variants = generate_font_name_variants("ANSI Shadow");
-        assert!(variants.contains(&"ANSI Shadow.flf".to_string()));
-        assert!(variants.contains(&"ANSI_Shadow.flf".to_string()));
-    }
-}

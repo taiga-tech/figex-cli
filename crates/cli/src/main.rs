@@ -1,14 +1,8 @@
-mod logo;
-mod utils;
+use std::io;
 
-use logo::print_logo;
+fn main() -> io::Result<()> {
+    let mut stdout = io::stdout();
+    let mut stderr = io::stderr();
 
-fn main() {
-    // ロゴを表示
-    print_logo("DOS Rebel", "FIGEX CLI").unwrap_or_else(|e| {
-        eprintln!("Error printing logo: {}", e);
-    });
-
-    let message = figex_cli_core::greet();
-    println!("{}", message);
+    figex_cli::app::run(&mut stdout, &mut stderr)
 }

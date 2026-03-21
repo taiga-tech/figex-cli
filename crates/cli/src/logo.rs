@@ -1,67 +1,80 @@
-use crate::utils::font::generate_font_name_variants;
-use anyhow::{Context, Ok, Result};
+use crate::{logo_assets::FontAssets, utils::font::generate_font_name_variants};
+use anyhow::{Context, Result};
 use figlet_rs::FIGlet;
 use owo_colors::OwoColorize;
-use rust_embed::RustEmbed;
+use std::io::{self, Write};
 
-// フォントファイルをバイナリに埋め込む（バイナリ配布対応）
-#[derive(RustEmbed)]
-#[folder = "../../assets/fonts/"]
-struct FontAssets;
+const LOGO_COLORS: &[(u8, u8, u8)] = &[
+    (255, 255, 255),
+    // (242, 78, 30),  // オレンジ
+    // (242, 78, 30),  // オレンジ
+    // (10, 207, 131), // グリーン
+    // (10, 207, 131), // グリーン
+    // (26, 188, 254), // ブルー
+    // (26, 188, 254), // ブルー
+    // (162, 89, 255), // パープル
+    // (162, 89, 255), // パープル
+];
 
-/// 指定されたフォント名に基づいてFIGletフォントを選択する
-fn select_font(font_name: &str) -> Result<FIGlet> {
-    // フォント名のバリエーションを生成（拡張子追加、スペース/アンダーバー変換）
-    let variants = generate_font_name_variants(font_name);
-
-    // バリエーションを順に試す
-    for variant in &variants {
-        if let Some(font_data) = FontAssets::get(variant) {
-            // バイト列を文字列に変換してFIGfontを生成
-            let font_content = std::str::from_utf8(font_data.data.as_ref())
-                .context("Font file is not valid UTF-8")?;
-
-            return FIGlet::from_content(font_content)
-                .map_err(|e| anyhow::anyhow!("Failed to parse FIGlet font: {}", e));
-        }
-    }
-
-    // すべてのバリエーションで見つからなかった場合
-    anyhow::bail!(
-        "Font '{}' not found. Tried variants: {:?}",
-        font_name,
-        variants
-    )
+#[derive(Debug, Clone)]
+pub struct LogoRenderer {
+    font: FIGlet,
+    font_name: String,
 }
 
-/// 指定されたフォントとテキストを使ってロゴを生成し、カラーで出力する
-pub fn print_logo(font_name: &str, text: &str) -> Result<()> {
-    let font =
-        select_font(font_name).with_context(|| format!("Failed to load font: {}", font_name))?;
+impl LogoRenderer {
+    pub fn from_embedded_font(font_name: &str) -> Result<Self> {
+        let variants = generate_font_name_variants(font_name);
 
-    let figure = font.convert(text).ok_or_else(|| {
-        anyhow::anyhow!(
-            "Failed to convert text '{}' using font '{}'",
-            text,
-            font_name
+        for variant in &variants {
+            if let Some(font_data) = FontAssets::get(variant) {
+                return Self::from_font_data(font_name, font_data.data.as_ref());
+            }
+        }
+
+        anyhow::bail!(
+            "Font '{}' not found. Tried variants: {:?}",
+            font_name,
+            variants
         )
-    })?;
+    }
 
-    let colors = [
-        (255, 255, 255),
-        // (242, 78, 30),  // オレンジ
-        // (242, 78, 30),  // オレンジ
-        // (10, 207, 131), // グリーン
-        // (10, 207, 131), // グリーン
-        // (26, 188, 254), // ブルー
-        // (26, 188, 254), // ブルー
-        // (162, 89, 255), // パープル
-        // (162, 89, 255), // パープル
-    ];
+    pub fn from_font_data(font_name: &str, font_data: &[u8]) -> Result<Self> {
+        let font_content =
+            std::str::from_utf8(font_data).context("Font file is not valid UTF-8")?;
+        let font = FIGlet::from_content(font_content)
+            .map_err(|e| anyhow::anyhow!("Failed to parse FIGlet font: {}", e))?;
 
-    for (i, line) in figure.to_string().lines().enumerate() {
-        let (r, g, b) = colors[i % colors.len()];
-        println!("{}", line.truecolor(r, g, b).bold());
+        Ok(Self {
+            font,
+            font_name: font_name.to_owned(),
+        })
+    }
+
+    pub fn render(&self, text: &str) -> Result<String> {
+        self.font
+            .convert(text)
+            .map(|figure| figure.to_string())
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Failed to convert text '{}' using font '{}'",
+                    text,
+                    self.font_name
+                )
+            })
+    }
+}
+
+pub fn render_logo(font_name: &str, text: &str) -> Result<String> {
+    LogoRenderer::from_embedded_font(font_name)
+        .with_context(|| format!("Failed to load font: {}", font_name))?
+        .render(text)
+}
+
+pub fn write_rendered_logo(writer: &mut dyn Write, rendered_logo: &str) -> io::Result<()> {
+    for (index, line) in rendered_logo.lines().enumerate() {
+        let (red, green, blue) = LOGO_COLORS[index % LOGO_COLORS.len()];
+        writeln!(writer, "{}", line.truecolor(red, green, blue).bold())?;
     }
 
     Ok(())

@@ -125,7 +125,9 @@ fn write_line(writer: &mut dyn Write, line: impl AsRef<str>) -> Result<()> {
 #[inline(never)]
 fn build_client(ctx: &AppContext) -> CdpClient {
     CdpClient::new(
-        ctx.settings.host_explicit.then(|| ctx.settings.host.clone()),
+        ctx.settings
+            .host_explicit
+            .then(|| ctx.settings.host.clone()),
         ctx.settings.port_explicit.then_some(ctx.settings.port),
         Duration::from_millis(ctx.settings.timeout_ms),
     )

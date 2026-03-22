@@ -26,7 +26,9 @@ pub async fn run(ctx: &AppContext, stdout: &mut dyn Write) -> Result<()> {
 
 fn build_client(ctx: &AppContext) -> CdpClient {
     CdpClient::new(
-        ctx.settings.host_explicit.then(|| ctx.settings.host.clone()),
+        ctx.settings
+            .host_explicit
+            .then(|| ctx.settings.host.clone()),
         ctx.settings.port_explicit.then_some(ctx.settings.port),
         Duration::from_millis(ctx.settings.timeout_ms),
     )

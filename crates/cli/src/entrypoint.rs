@@ -36,7 +36,7 @@ where
 {
     let exit_code = run_with_exit_code(cli, runner, stderr).await;
     if let Some(code) = exit_code {
-        return ExitCode::from(code as u8);
+        return ExitCode::from(u8::try_from(code).unwrap_or(1));
     }
 
     ExitCode::SUCCESS

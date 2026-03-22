@@ -82,7 +82,15 @@ pub struct Settings {
     // Runtime connection
     pub transport: String,
     pub host: String,
+    /// Whether `host` was explicitly provided (CLI / env / file) rather than
+    /// being the built-in default.  When `false`, `None` should be passed to
+    /// `CdpClient::new` so that auto-discovery selects the host.
+    pub host_explicit: bool,
     pub port: u16,
+    /// Whether `port` was explicitly provided (CLI / env / file) rather than
+    /// being the built-in default.  When `false`, `None` should be passed to
+    /// `CdpClient::new` so that the port-range scan runs.
+    pub port_explicit: bool,
     pub timeout_ms: u64,
     pub snapshot_max_depth: u32,
 
@@ -108,7 +116,9 @@ impl Default for Settings {
             log_level: "warn".to_string(),
             transport: "auto".to_string(),
             host: "127.0.0.1".to_string(),
+            host_explicit: false,
             port: 9222,
+            port_explicit: false,
             timeout_ms: 5000,
             snapshot_max_depth: 128,
             include_diagnostics: true,
@@ -215,19 +225,29 @@ where
             .unwrap_or(defaults.transport),
 
         // host: CLI > env > file > default
-        host: cli
-            .host
-            .clone()
-            .or_else(|| env_fn("FIGEX_HOST"))
-            .or_else(|| rt.and_then(|r| r.host.clone()))
-            .unwrap_or(defaults.host),
+        host: {
+            cli.host
+                .clone()
+                .or_else(|| env_fn("FIGEX_HOST"))
+                .or_else(|| rt.and_then(|r| r.host.clone()))
+                .unwrap_or(defaults.host)
+        },
+
+        host_explicit: cli.host.is_some()
+            || env_fn("FIGEX_HOST").is_some()
+            || rt.and_then(|r| r.host.as_ref()).is_some(),
 
         // port: CLI > env > file > default
-        port: cli
-            .port
-            .or_else(|| env_fn("FIGEX_PORT").and_then(|v| v.parse::<u16>().ok()))
-            .or_else(|| rt.and_then(|r| r.port))
-            .unwrap_or(defaults.port),
+        port: {
+            cli.port
+                .or_else(|| env_fn("FIGEX_PORT").and_then(|v| v.parse::<u16>().ok()))
+                .or_else(|| rt.and_then(|r| r.port))
+                .unwrap_or(defaults.port)
+        },
+
+        port_explicit: cli.port.is_some()
+            || env_fn("FIGEX_PORT").is_some()
+            || rt.and_then(|r| r.port).is_some(),
 
         // timeout_ms: CLI > env > file > default
         timeout_ms: cli

@@ -287,14 +287,17 @@ impl RuntimeClient for CdpClient {
             .await
             .map_err(|_| RuntimeError::SnapshotFailed)?;
 
-        // Extract ts from the eval result if present.
-        let ts = result
-            .get("result")
-            .and_then(|r| r.get("value"))
+        // Extract ok and ts from the JS eval result ({ ok: bool, ts: number }).
+        let value = result.get("result").and_then(|r| r.get("value"));
+        let ok = value
+            .and_then(|v| v.get("ok"))
+            .and_then(|o| o.as_bool())
+            .unwrap_or(false);
+        let ts = value
             .and_then(|v| v.get("ts"))
             .and_then(|t| t.as_u64())
             .unwrap_or(0);
 
-        Ok(RuntimeFrameSnapshot { ok: true, ts })
+        Ok(RuntimeFrameSnapshot { ok, ts })
     }
 }

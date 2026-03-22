@@ -183,7 +183,7 @@ pub async fn discover_best_target(config: &ProbeConfig) -> Result<DiscoveredTarg
                 target_id: t.id.clone(),
                 title: t.title.clone(),
                 url: t.url.clone(),
-                ws_debugger_url: t.websocket_debugger_url.clone().unwrap(),
+                ws_debugger_url: t.websocket_debugger_url.clone().expect("target with score > 0 always has a websocket_debugger_url"),
                 score,
             });
         }

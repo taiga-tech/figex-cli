@@ -60,7 +60,7 @@ pub async fn run_io_with_logo(
 
     match cli.command {
         None => writeln!(stdout, "Run `figex --help` for usage.")?,
-        Some(cmd) => return dispatch(cmd, &ctx).await,
+        Some(cmd) => return dispatch_io(cmd, &ctx, stdout).await,
     }
 
     Ok(())
@@ -122,9 +122,9 @@ pub fn log_level_to_str(l: &LogLevel) -> String {
 // Dispatch
 // ---------------------------------------------------------------------------
 
-async fn dispatch(command: Commands, ctx: &AppContext) -> Result<()> {
+async fn dispatch_io(command: Commands, ctx: &AppContext, stdout: &mut dyn Write) -> Result<()> {
     match command {
-        Commands::Attach => commands::attach::run(ctx).await,
+        Commands::Attach => commands::attach::run(ctx, stdout).await,
         Commands::Doctor => commands::doctor::run(ctx).await,
         Commands::Inspect {
             subcommand: InspectSubcommand::Frame { frame_ref },

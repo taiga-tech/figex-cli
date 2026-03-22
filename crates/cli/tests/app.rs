@@ -132,8 +132,14 @@ async fn run_io_propagates_stdout_write_failures() {
 async fn subcommand_attach_returns_error_when_no_runtime() {
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
-    // attach requires a live Figma runtime; no runtime → expect failure
-    let result = run_io(make_cli(&["attach"]), &mut stdout, &mut stderr).await;
+    // Use an explicit port with no listener so auto-discovery is bypassed and
+    // attach fails deterministically regardless of the local environment.
+    let result = run_io(
+        make_cli(&["--host", "127.0.0.1", "--port", "1", "attach"]),
+        &mut stdout,
+        &mut stderr,
+    )
+    .await;
     assert!(
         result.is_err(),
         "attach should fail when no Figma runtime is running"
@@ -157,6 +163,20 @@ async fn subcommand_attach_succeeds_with_mock_runtime() {
     run_io(make_cli(&args), &mut stdout, &mut stderr)
         .await
         .expect("attach should succeed with a mock runtime");
+
+    let output = String::from_utf8(stdout).expect("stdout should be valid UTF-8");
+    assert!(
+        output.contains("Attached to Figma runtime"),
+        "stdout should contain attach success message"
+    );
+    assert!(
+        output.contains("host:"),
+        "stdout should contain host line"
+    );
+    assert!(
+        output.contains("port:"),
+        "stdout should contain port line"
+    );
 }
 
 #[tokio::test]

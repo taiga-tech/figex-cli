@@ -50,7 +50,7 @@ mock HTTP / WebSocket server を立て、次を検証する。
 実機依存は ignored test にする。
 
 ```bash
-FIGMA_RUNTIME_TEST=1 cargo test -- --ignored
+FIGMA_RUNTIME_TEST=1 cargo test -p figex-cli-runtime -- --ignored
 ```
 
 ここでは少なくとも次を確認する。
@@ -58,6 +58,73 @@ FIGMA_RUNTIME_TEST=1 cargo test -- --ignored
 - attach
 - doctor
 - frame snapshot
+
+### 5.1 事前準備: Chrome + Figma Web 版
+
+Figma Desktop は現状 CDP ポートを公開しないため、Chrome に Figma Web 版を開いて代替する。
+
+**1. デバッグポート付きで Chrome を起動する**
+
+既存の Chrome を完全に終了してから起動すること。`open -a` はフラグを引き継がないため、バイナリを直接実行する。
+
+```bash
+killall "Google Chrome" 2>/dev/null
+sleep 2
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --remote-debugging-port=9222 \
+  --user-data-dir=/tmp/chrome-debug-profile &
+```
+
+**2. Figma ファイルを開く**
+
+起動した Chrome で `figma.com` のデザインファイルを開く（ファイルが開いていないと target が見つからない）。
+
+**3. CDP エンドポイントを確認する**
+
+```bash
+curl -s http://localhost:9222/json/version
+# → {"Browser": "Chrome/...", "Protocol-Version": "1.3", ...} が返れば OK
+```
+
+### 5.2 CLI での動作確認
+
+**`doctor` コマンド（JSON）**
+
+```bash
+./target/debug/figex-cli doctor --json
+```
+
+期待する出力:
+
+```json
+{
+  "transport": "cdp",
+  "host": "127.0.0.1",
+  "port": 9222,
+  "target_id": "...",
+  "target_title": "... – Figma",
+  "target_url": "https://www.figma.com/...",
+  "target_score": 8,
+  "ping": true,
+  "snapshot": true,
+  "latency_ms": ...,
+  "warnings": [],
+  "errors": []
+}
+```
+
+**`attach` コマンド**
+
+```bash
+./target/debug/figex-cli attach
+# → "Attached to Figma runtime" と接続情報が表示され exit code 0 で終了
+```
+
+**ignored テスト一括実行**
+
+```bash
+FIGMA_RUNTIME_TEST=1 cargo test -p figex-cli-runtime -- --ignored
+```
 
 ## 6. Launcher / packaging test
 

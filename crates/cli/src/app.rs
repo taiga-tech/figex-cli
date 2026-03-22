@@ -28,7 +28,7 @@ impl AppContext {
 // Entry points
 // ---------------------------------------------------------------------------
 
-pub fn run(cli: Cli) -> Result<()> {
+pub async fn run(cli: Cli) -> Result<()> {
     run_io_with_logo(
         cli,
         DEFAULT_LOGO_FONT,
@@ -36,13 +36,14 @@ pub fn run(cli: Cli) -> Result<()> {
         &mut io::stdout(),
         &mut io::stderr(),
     )
+    .await
 }
 
-pub fn run_io(cli: Cli, stdout: &mut dyn Write, stderr: &mut dyn Write) -> Result<()> {
-    run_io_with_logo(cli, DEFAULT_LOGO_FONT, DEFAULT_LOGO_TEXT, stdout, stderr)
+pub async fn run_io(cli: Cli, stdout: &mut dyn Write, stderr: &mut dyn Write) -> Result<()> {
+    run_io_with_logo(cli, DEFAULT_LOGO_FONT, DEFAULT_LOGO_TEXT, stdout, stderr).await
 }
 
-pub fn run_io_with_logo(
+pub async fn run_io_with_logo(
     cli: Cli,
     logo_font: &str,
     logo_text: &str,
@@ -59,7 +60,7 @@ pub fn run_io_with_logo(
 
     match cli.command {
         None => writeln!(stdout, "Run `figex --help` for usage.")?,
-        Some(cmd) => return dispatch(cmd, &ctx),
+        Some(cmd) => return dispatch(cmd, &ctx).await,
     }
 
     Ok(())
@@ -121,10 +122,10 @@ pub fn log_level_to_str(l: &LogLevel) -> String {
 // Dispatch
 // ---------------------------------------------------------------------------
 
-fn dispatch(command: Commands, ctx: &AppContext) -> Result<()> {
+async fn dispatch(command: Commands, ctx: &AppContext) -> Result<()> {
     match command {
-        Commands::Attach => commands::attach::run(ctx),
-        Commands::Doctor => commands::doctor::run(ctx),
+        Commands::Attach => commands::attach::run(ctx).await,
+        Commands::Doctor => commands::doctor::run(ctx).await,
         Commands::Inspect {
             subcommand: InspectSubcommand::Frame { frame_ref },
         } => commands::inspect::run(ctx, &frame_ref),

@@ -12,8 +12,17 @@ anyhow = "1.0.102"
 clap = { version = "4", features = ["derive"] }
 dirs = "6"
 figex-cli-core = { path = "../core" }
+figex-cli-runtime = { path = "../runtime" }
 figlet-rs = "1.0.0"
 owo-colors = "4.3.0"
 rust-embed = "8.11.0"
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 toml = "0.9.8"
+tokio = { version = "1", features = ["macros", "rt"] }
+
+[dev-dependencies]
+futures-util = "0.3"
+tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = "0.24"
+wiremock = "0.6"

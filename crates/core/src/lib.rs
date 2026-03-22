@@ -13,8 +13,8 @@ pub enum RuntimeError {
     AttachFailed,
     #[error("timed out")]
     Timeout,
-    #[error("evaluate failed")]
-    EvaluateFailed,
+    #[error("evaluate failed: {0}")]
+    EvaluateFailed(String),
     #[error("snapshot failed")]
     SnapshotFailed,
 }

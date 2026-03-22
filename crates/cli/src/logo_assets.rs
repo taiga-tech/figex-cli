@@ -1,6 +1,6 @@
 use rust_embed::RustEmbed;
 
-// RustEmbed が生成する補助コードは coverage 集計から除外する。
+// RustEmbed generated code is excluded from coverage reporting.
 #[derive(RustEmbed)]
 #[folder = "../../assets/fonts/"]
 pub(crate) struct FontAssets;

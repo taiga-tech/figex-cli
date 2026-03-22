@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const familySyncMock = vi.fn<() => string | null>()
 const spawnSyncMock = vi.fn()
+const resolvePackageDirMock = vi.fn<(packageName: string) => string>()
 const resolvePackageNameMock =
     vi.fn<(platform: string, arch: string, isGlibc: boolean) => string>()
 const resolveTargetTripleMock =
@@ -14,6 +15,10 @@ vi.mock('detect-libc', () => ({
 
 vi.mock('node:child_process', () => ({
     spawnSync: spawnSyncMock,
+}))
+
+vi.mock('./package', () => ({
+    resolvePackageDir: resolvePackageDirMock,
 }))
 
 vi.mock('./platform', () => ({
@@ -37,8 +42,10 @@ type SetupOptions = {
     arch?: string
     argv?: string[]
     libcFamily?: string | null
+    packageDir?: string
     packageName?: string
     platform?: string
+    resolvePackageDirError?: Error
     spawnResult?: SpawnResult
     targetTriple?: string
 }
@@ -75,17 +82,29 @@ function setupLauncher(options: SetupOptions = {}) {
         options.argv ?? ['node', 'figex-cli', '--flag', 'value']
     )
 
+    const packageName =
+        options.packageName ?? '@taiga-tech/figex-cli-linux-x64-gnu'
+    const packageDir =
+        options.packageDir ?? path.join('/virtual', ...packageName.split('/'))
+
     familySyncMock.mockReturnValue(
         options.libcFamily === undefined ? 'glibc' : options.libcFamily
     )
-    resolvePackageNameMock.mockReturnValue(
-        options.packageName ?? '@taiga-tech/figex-cli-linux-x64-gnu'
-    )
+    resolvePackageNameMock.mockReturnValue(packageName)
     resolveTargetTripleMock.mockReturnValue(
         options.targetTriple ?? 'x86_64-unknown-linux-gnu'
     )
 
     spawnSyncMock.mockReturnValue(options.spawnResult ?? { status: 0 })
+    resolvePackageDirMock.mockImplementation((requestedPackageName) => {
+        if (requestedPackageName !== packageName) {
+            throw new Error(`Unexpected package name: ${requestedPackageName}`)
+        }
+        if (options.resolvePackageDirError !== undefined) {
+            throw options.resolvePackageDirError
+        }
+        return packageDir
+    })
 
     const stderrWriteSpy = vi
         .spyOn(process.stderr, 'write')
@@ -97,7 +116,11 @@ function setupLauncher(options: SetupOptions = {}) {
             throw new Error(`process.exit:${String(code)}`)
         })
 
-    return { exitSpy, stderrWriteSpy }
+    return {
+        exitSpy,
+        resolvedPackageDir: packageDir,
+        stderrWriteSpy,
+    }
 }
 
 async function runLauncher(): Promise<void> {
@@ -111,6 +134,7 @@ afterEach(() => {
 
     familySyncMock.mockReset()
     spawnSyncMock.mockReset()
+    resolvePackageDirMock.mockReset()
     resolvePackageNameMock.mockReset()
     resolveTargetTripleMock.mockReset()
 
@@ -120,7 +144,7 @@ afterEach(() => {
 describe('index launcher', () => {
     it('glibc 環境では isGlibc=true で解決し status を process.exit に伝播する', async () => {
         // Given
-        const { exitSpy } = setupLauncher({
+        const { exitSpy, resolvedPackageDir } = setupLauncher({
             libcFamily: 'glibc',
             spawnResult: { status: 23 },
         })
@@ -140,11 +164,8 @@ describe('index launcher', () => {
             true
         )
 
-        const pkgDir = path.dirname(
-            require.resolve('@taiga-tech/figex-cli-linux-x64-gnu/package.json')
-        )
         const expectedBinaryPath = path.join(
-            pkgDir,
+            resolvedPackageDir,
             'vendor',
             'x86_64-unknown-linux-gnu',
             'figex-cli',
@@ -161,7 +182,7 @@ describe('index launcher', () => {
 
     it('win32 では実行ファイル名に .exe を付与して実行する', async () => {
         // Given
-        setupLauncher({
+        const { resolvedPackageDir } = setupLauncher({
             libcFamily: null,
             packageName: '@taiga-tech/figex-cli-win32-x64',
             platform: 'win32',
@@ -173,11 +194,8 @@ describe('index launcher', () => {
         await expect(runLauncher()).rejects.toThrow('process.exit:0')
 
         // Then
-        const pkgDir = path.dirname(
-            require.resolve('@taiga-tech/figex-cli-win32-x64/package.json')
-        )
         const expectedBinaryPath = path.join(
-            pkgDir,
+            resolvedPackageDir,
             'vendor',
             'x86_64-pc-windows-msvc',
             'figex-cli',
@@ -225,6 +243,7 @@ describe('index launcher', () => {
         // Given
         const { exitSpy, stderrWriteSpy } = setupLauncher({
             packageName: '@taiga-tech/figex-cli-package-not-installed',
+            resolvePackageDirError: new Error('Cannot find module'),
         })
 
         // When
@@ -245,7 +264,7 @@ describe('index launcher', () => {
 
     it('spawnSync が error を返した場合はメッセージを出して exit(1) する', async () => {
         // Given
-        const { exitSpy, stderrWriteSpy } = setupLauncher({
+        const { exitSpy, resolvedPackageDir, stderrWriteSpy } = setupLauncher({
             packageName: '@taiga-tech/figex-cli-linux-x64-gnu',
             spawnResult: {
                 error: new Error('spawn failed'),
@@ -257,11 +276,8 @@ describe('index launcher', () => {
         await expect(runLauncher()).rejects.toThrow('process.exit:1')
 
         // Then
-        const pkgDir = path.dirname(
-            require.resolve('@taiga-tech/figex-cli-linux-x64-gnu/package.json')
-        )
         const expectedBinaryPath = path.join(
-            pkgDir,
+            resolvedPackageDir,
             'vendor',
             'x86_64-unknown-linux-gnu',
             'figex-cli',
@@ -374,7 +390,7 @@ describe('index launcher', () => {
 
     it('追加CLI引数がない場合は spawnSync に空配列を渡す', async () => {
         // Given
-        setupLauncher({
+        const { resolvedPackageDir } = setupLauncher({
             argv: ['node', 'figex-cli'],
             spawnResult: { status: 0 },
         })
@@ -383,11 +399,8 @@ describe('index launcher', () => {
         await expect(runLauncher()).rejects.toThrow('process.exit:0')
 
         // Then
-        const pkgDir = path.dirname(
-            require.resolve('@taiga-tech/figex-cli-linux-x64-gnu/package.json')
-        )
         const expectedBinaryPath = path.join(
-            pkgDir,
+            resolvedPackageDir,
             'vendor',
             'x86_64-unknown-linux-gnu',
             'figex-cli',

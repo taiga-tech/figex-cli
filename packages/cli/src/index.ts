@@ -2,6 +2,7 @@ import { familySync } from 'detect-libc'
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 
+import { resolvePackageDir } from './package'
 import { resolvePackageName, resolveTargetTriple } from './platform'
 
 const BINARY_NAME = 'figex-cli' as const
@@ -15,8 +16,7 @@ function main(): void {
 
     let pkgDir: string
     try {
-        const pkgJsonPath = require.resolve(`${pkg}/package.json`)
-        pkgDir = path.dirname(pkgJsonPath)
+        pkgDir = resolvePackageDir(pkg)
     } catch (err) {
         process.stderr.write(
             `Failed to resolve package ${pkg}. Is the platform package installed?\n${err}\n`

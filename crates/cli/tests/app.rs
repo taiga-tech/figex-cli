@@ -1,6 +1,6 @@
 #[path = "support/failing_writer.rs"]
 mod failing_writer;
-#[path = "../../runtime/tests/support/mock_cdp_server.rs"]
+#[path = "support/mock_cdp_server.rs"]
 mod mock_cdp_server;
 
 use clap::Parser;
@@ -10,7 +10,6 @@ use figex_cli::app::{
 use figex_cli::cli::Cli;
 use figex_cli::cli::{LogLevel, Transport};
 use std::io;
-use wiremock::MockServer;
 
 fn make_cli(args: &[&str]) -> Cli {
     Cli::try_parse_from(std::iter::once("figex").chain(args.iter().copied()))
@@ -148,12 +147,10 @@ async fn subcommand_attach_returns_error_when_no_runtime() {
 
 #[tokio::test]
 async fn subcommand_attach_succeeds_with_mock_runtime() {
-    let http_server = MockServer::start().await;
-    let http_port = http_server.address().port();
-
     let (ws_listener, ws_port) = mock_cdp_server::bind_ws_listener().await;
     tokio::spawn(mock_cdp_server::serve_one(ws_listener));
-    mock_cdp_server::mount_figma_cdp(&http_server, "t-app-attach", "Figma - Attach", ws_port).await;
+    let http_port =
+        mock_cdp_server::spawn_figma_cdp_server("t-app-attach", "Figma - Attach", ws_port).await;
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
@@ -169,27 +166,19 @@ async fn subcommand_attach_succeeds_with_mock_runtime() {
         output.contains("Attached to Figma runtime"),
         "stdout should contain attach success message"
     );
-    assert!(
-        output.contains("host:"),
-        "stdout should contain host line"
-    );
-    assert!(
-        output.contains("port:"),
-        "stdout should contain port line"
-    );
+    assert!(output.contains("host:"), "stdout should contain host line");
+    assert!(output.contains("port:"), "stdout should contain port line");
 }
 
 #[tokio::test]
 async fn subcommand_attach_maps_non_target_errors_to_connection_failed() {
-    let http_server = MockServer::start().await;
-    let http_port = http_server.address().port();
-
     let (ws_listener, ws_port) = mock_cdp_server::bind_ws_listener().await;
     tokio::spawn(mock_cdp_server::serve_one_with_runtime_enable_error(
         ws_listener,
     ));
-    mock_cdp_server::mount_figma_cdp(&http_server, "t-app-attach-fail", "Figma - Attach", ws_port)
-        .await;
+    let http_port =
+        mock_cdp_server::spawn_figma_cdp_server("t-app-attach-fail", "Figma - Attach", ws_port)
+            .await;
 
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();

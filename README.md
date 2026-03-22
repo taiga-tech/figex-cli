@@ -1,117 +1,151 @@
 # figex-cli
 
-Rust 製ネイティブ CLI を npm で配布するためのモノレポです。
-`@taiga-tech/figex-cli`（TypeScript ランチャ）が実行環境を判定し、対応するプラットフォーム別パッケージに同梱されたネイティブバイナリを起動します。
+Figma のデザインデータを CLI から抽出・変換するツールです。
 
-## 構成概要
-
-- `crates/core`: Rust コアライブラリ
-- `crates/cli`: Rust バイナリ本体（`figex-cli`）
-- `packages/cli`: npm 配布用ランチャ（`figex-cli` コマンド）
-- `packages/cli-<platform>`: プラットフォーム別バイナリ同梱パッケージ
-- `scripts/place-binary-like-ci.sh`: CI と同じ規約で `vendor/` にバイナリを配置
-
-## サポートプラットフォーム
-
-| Node 判定           | Rust target triple          | npm package                            |
-| ------------------- | --------------------------- | -------------------------------------- |
-| `darwin/arm64`      | `aarch64-apple-darwin`      | `@taiga-tech/figex-cli-darwin-arm64`   |
-| `darwin/x64`        | `x86_64-apple-darwin`       | `@taiga-tech/figex-cli-darwin-x64`     |
-| `win32/x64`         | `x86_64-pc-windows-msvc`    | `@taiga-tech/figex-cli-win32-x64`      |
-| `linux/x64` + glibc | `x86_64-unknown-linux-gnu`  | `@taiga-tech/figex-cli-linux-x64-gnu`  |
-| `linux/x64` + musl  | `x86_64-unknown-linux-musl` | `@taiga-tech/figex-cli-linux-x64-musl` |
-
-## 要件
-
-- Node.js `>= 24`
-- pnpm `10.30.3`
-- Rust `1.93.1`
-- `mise`（推奨。`mise.toml` のツール定義を利用）
-
-## セットアップ
+## インストール
 
 ```bash
-mise install
-pnpm install
+npm install -g @taiga-tech/figex-cli
 ```
 
-`mise` を使わない場合は、必要バージョンの Node/pnpm/Rust を手動で用意してください。
+> **対応プラットフォーム:** macOS (arm64 / x64), Windows (x64), Linux (x64 glibc / musl)
 
-## よく使うコマンド
+## クイックスタート
 
 ```bash
-# JS パッケージ + Rust ワークスペースをビルド
-mise run build
+# Figma Desktop の接続を確認
+figex doctor
 
-# JS (Vitest) + Rust テスト
-mise run test
-
-# Lint + 型チェック + テスト
-mise run check
-
-# Prettier + cargo fmt
-mise run format
-
-# CI 互換フローでローカル実行（バイナリ配置 -> ランチャービルド -> 実行）
-mise run cli
-
-# 任意ターゲット向け CI 互換フロー
-TARGET=x86_64-unknown-linux-musl mise run cli-target
+# Figma Desktop にアタッチ
+figex attach
 ```
 
-## ローカルで CLI を直接動かす
+## コマンド一覧
+
+### `figex attach` — Figma Desktop に接続
+
+Figma Desktop ランタイムに接続し、セッション情報を表示します。
 
 ```bash
-# 1) ホスト向け Rust バイナリをビルドして vendor に配置
-scripts/place-binary-like-ci.sh --build
-
-# 2) ランチャーをビルド
-pnpm --filter @taiga-tech/figex-cli run build
-
-# 3) ランチャーを実行
-node packages/cli/dist/index.cjs
+figex attach
+figex attach --host localhost --port 18412
 ```
 
-## バイナリ配置規約
+### `figex doctor` — 接続環境を診断
 
-プラットフォーム別パッケージには次のパスでバイナリを格納します。
+ポート探索・ping・スナップショット取得の疎通確認を行い、診断結果を表示します。
+
+```bash
+figex doctor
+figex doctor --json --pretty
+```
+
+### `figex inspect frame <FRAME_REF>` — フレームのメタデータを確認 ⚠️ 未実装
+
+指定フレームのノード数・テキスト数・レイアウト数などのメタデータをプレビューします。
+
+```bash
+figex inspect frame "My Frame"
+figex inspect frame figma://...
+```
+
+### `figex extract frame <FRAME_REF>` — フレームを抽出 ⚠️ 未実装
+
+指定フレームの生スナップショットを取得し、JSON ファイルに保存します。
+
+```bash
+figex extract frame "My Frame"
+figex extract frame "My Frame" --output raw.json
+```
+
+| オプション            | 説明             | デフォルト |
+| --------------------- | ---------------- | ---------- |
+| `-o, --output <PATH>` | 出力ファイルパス | `raw.json` |
+
+### `figex features` — 特徴量ファイルを生成 ⚠️ 未実装
+
+`raw.json` を解析して `features.json` を生成します。
+
+```bash
+figex features
+figex features --input raw.json --output features.json
+```
+
+| オプション            | 説明             | デフォルト      |
+| --------------------- | ---------------- | --------------- |
+| `-i, --input <PATH>`  | 入力ファイルパス | `raw.json`      |
+| `-o, --output <PATH>` | 出力ファイルパス | `features.json` |
+
+### `figex normalize` — UI 中間表現を生成 ⚠️ 未実装
+
+`features.json` を正規化して `ui.ir.json`（UI 中間表現）を生成します。
+
+```bash
+figex normalize
+figex normalize --input features.json --output ui.ir.json
+```
+
+| オプション            | 説明             | デフォルト      |
+| --------------------- | ---------------- | --------------- |
+| `-i, --input <PATH>`  | 入力ファイルパス | `features.json` |
+| `-o, --output <PATH>` | 出力ファイルパス | `ui.ir.json`    |
+
+### `figex report` — レポートを生成 ⚠️ 未実装
+
+`ui.ir.json` から Markdown レポートを生成します。
+
+```bash
+figex report
+figex report --input ui.ir.json --output report.md
+```
+
+| オプション            | 説明             | デフォルト   |
+| --------------------- | ---------------- | ------------ |
+| `-i, --input <PATH>`  | 入力ファイルパス | `ui.ir.json` |
+| `-o, --output <PATH>` | 出力ファイルパス | `report.md`  |
+
+## 処理パイプライン
 
 ```text
-packages/cli-*/vendor/<target-triple>/figex-cli/figex-cli(.exe)
+Figma Desktop
+    ↓  attach / doctor（接続確認）
+extract frame → raw.json          ← ⚠️ 未実装
+    ↓  features
+features.json                     ← ⚠️ 未実装
+    ↓  normalize
+ui.ir.json                        ← ⚠️ 未実装
+    ↓  report
+report.md                         ← ⚠️ 未実装
 ```
 
-この規約は `scripts/place-binary-like-ci.sh` に実装されています。
+## グローバルフラグ
 
-## テスト方針
+全コマンドで共通して使用できるフラグです。
 
-- TypeScript: `packages/cli/src/*.test.ts`（Vitest）
-- Rust: `cargo test --workspace`
-- プラットフォーム判定やバイナリパス解決を変更した場合は、Vitest ケースを追加・更新してください
+| フラグ                | 説明                                                        | デフォルト              |
+| --------------------- | ----------------------------------------------------------- | ----------------------- |
+| `--json`              | 出力を JSON 形式にする                                      | false                   |
+| `--pretty`            | JSON を整形出力する                                         | false                   |
+| `--timeout-ms <MS>`   | 接続タイムアウト（ミリ秒）                                  | 設定ファイル依存        |
+| `--transport <TYPE>`  | トランスポート種別（`cdp` / `mcp` / `auto`）                | `auto`                  |
+| `--host <HOST>`       | 接続先ホスト                                                | `localhost`             |
+| `--port <PORT>`       | 接続先ポート                                                | `18412`                 |
+| `--config <PATH>`     | 設定ファイルのパス                                          | `figex.toml` を自動探索 |
+| `--log-level <LEVEL>` | ログレベル（`error` / `warn` / `info` / `debug` / `trace`） | `warn`                  |
 
-## リポジトリ構成（抜粋）
+設定の優先順位: CLI フラグ > 環境変数 > `figex.toml` > デフォルト値
 
-```text
-.
-├── crates/
-│   ├── core/
-│   └── cli/
-├── packages/
-│   ├── cli/
-│   ├── cli-darwin-arm64/
-│   ├── cli-darwin-x64/
-│   ├── cli-win32-x64/
-│   ├── cli-linux-x64-gnu/
-│   └── cli-linux-x64-musl/
-├── scripts/
-│   └── place-binary-like-ci.sh
-└── mise.toml
+## 設定ファイル
+
+プロジェクトルートに `figex.toml` を置くと設定を共有できます。
+
+```toml
+host = "localhost"
+port = 18412
+timeout_ms = 5000
+transport = "auto"
+log_level = "warn"
 ```
-
-## 変更管理とリリース
-
-- コミットメッセージは Conventional Commits（`feat:`, `fix:`, `refactor:` など）
-- 公開挙動やバージョンに影響する変更は `.changeset/` を追加
-- publish 順序は platform package を先、`@taiga-tech/figex-cli` を後
 
 ## 注意点
 

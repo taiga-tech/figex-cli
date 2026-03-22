@@ -232,7 +232,7 @@ impl RuntimeClient for CdpClient {
             )
             .await
             .is_ok();
-        let latency_ms = Some(ping_start.elapsed().as_millis() as u64);
+        let latency_ms = Some(u64::try_from(ping_start.elapsed().as_millis()).unwrap_or(u64::MAX));
 
         if !ping_ok {
             errors.push("ping failed".to_string());

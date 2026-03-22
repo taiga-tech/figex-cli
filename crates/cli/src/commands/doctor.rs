@@ -54,7 +54,7 @@ pub fn fallback_health(ctx: &AppContext, error: RuntimeError) -> RuntimeHealth {
         ping_script_version: ping_script_version.to_string(),
         snapshot_script_version: snapshot_script_version.to_string(),
         warnings: vec![],
-        errors: vec![format!("{error:?}")],
+        errors: vec![format!("{error}")],
     }
 }
 

@@ -62,7 +62,7 @@ fn fallback_health_uses_context_and_versions() {
     assert_eq!(health.port, ctx.settings.port);
     assert_eq!(health.ping_script_version, ping_script_version);
     assert_eq!(health.snapshot_script_version, snapshot_script_version);
-    assert_eq!(health.errors, vec!["AttachFailed"]);
+    assert_eq!(health.errors, vec!["attach failed"]);
 }
 
 #[test]
@@ -137,7 +137,7 @@ fn render_health_formats_fallback_json_output() {
 
     let output = String::from_utf8(output).expect("output should be valid UTF-8");
     assert!(output.contains("\"errors\": ["));
-    assert!(output.contains("\"AttachFailed\""));
+    assert!(output.contains("\"attach failed\""));
 }
 
 #[test]

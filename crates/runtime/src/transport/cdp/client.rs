@@ -61,9 +61,10 @@ struct WsSession {
 
 impl WsSession {
     async fn connect(ws_url: &str) -> Result<Self, RuntimeError> {
-        let (ws, _) = connect_async(ws_url)
-            .await
-            .map_err(|_| RuntimeError::AttachFailed)?;
+        let ws = match connect_async(ws_url).await {
+            Ok((ws, _)) => ws,
+            Err(_) => return Err(RuntimeError::AttachFailed),
+        };
         let (sink, stream) = ws.split();
         Ok(Self {
             sink,
@@ -145,21 +146,24 @@ fn map_ws_text_message(body: &str, id: u32) -> Result<Option<serde_json::Value>,
     Ok(Some(value))
 }
 
+async fn read_until_matching_response(
+    stream: &mut futures_util::stream::SplitStream<WsStream>,
+    id: u32,
+) -> Result<serde_json::Value, RuntimeError> {
+    loop {
+        let value = map_ws_incoming_message(stream.next().await, id)?;
+        if let Some(value) = value {
+            return Ok(value);
+        }
+    }
+}
+
 async fn wait_for_matching_response(
     stream: &mut futures_util::stream::SplitStream<WsStream>,
     id: u32,
     call_timeout: Duration,
 ) -> Result<serde_json::Value, RuntimeError> {
-    // Receive messages until we get the one with the matching id.
-    let result = timeout(call_timeout, async {
-        loop {
-            match map_ws_incoming_message(stream.next().await, id)? {
-                Some(value) => return Ok(value),
-                None => continue,
-            }
-        }
-    })
-    .await;
+    let result = timeout(call_timeout, read_until_matching_response(stream, id)).await;
 
     match result {
         Ok(value) => value,
@@ -213,6 +217,18 @@ fn health_from_target_no_ws(target: &DiscoveredTarget, errors: Vec<String>) -> R
     }
 }
 
+fn result_value(result: &serde_json::Value) -> Option<&serde_json::Value> {
+    result.get("value")
+}
+
+fn result_ok(value: &serde_json::Value) -> Option<&serde_json::Value> {
+    value.get("ok")
+}
+
+fn result_ts(value: &serde_json::Value) -> Option<&serde_json::Value> {
+    value.get("ts")
+}
+
 // ---------------------------------------------------------------------------
 // RuntimeClient impl
 // ---------------------------------------------------------------------------
@@ -239,7 +255,10 @@ impl RuntimeClient for CdpClient {
         let mut warnings: Vec<String> = Vec::new();
         let mut errors: Vec<String> = Vec::new();
 
-        let fallback_host = self.host.clone().unwrap_or_else(|| "127.0.0.1".to_string());
+        let fallback_host = match &self.host {
+            Some(host) => host.clone(),
+            None => "127.0.0.1".to_string(),
+        };
         let fallback_port = self.port.unwrap_or(0);
 
         // -- Target discovery --
@@ -327,18 +346,21 @@ impl RuntimeClient for CdpClient {
                 json!({ "expression": js_bridge::snapshot_script(), "returnByValue": true }),
                 self.timeout,
             )
-            .await
-            .map_err(|_| RuntimeError::SnapshotFailed)?;
+            .await;
+        let result = match result {
+            Ok(result) => result,
+            Err(_) => return Err(RuntimeError::SnapshotFailed),
+        };
 
         // Extract ok and ts from the JS eval result ({ ok: bool, ts: number }).
-        let value = result.get("result").and_then(|r| r.get("value"));
+        let value = result.get("result").and_then(result_value);
         let ok = value
-            .and_then(|v| v.get("ok"))
-            .and_then(|o| o.as_bool())
+            .and_then(result_ok)
+            .and_then(serde_json::Value::as_bool)
             .unwrap_or(false);
         let ts = value
-            .and_then(|v| v.get("ts"))
-            .and_then(|t| t.as_u64())
+            .and_then(result_ts)
+            .and_then(serde_json::Value::as_u64)
             .unwrap_or(0);
 
         Ok(RuntimeFrameSnapshot { ok, ts })

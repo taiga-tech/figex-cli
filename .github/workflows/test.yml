@@ -59,19 +59,19 @@ jobs:
 
     steps:
       - name: Download Ubuntu coverage
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: coverage-ubuntu-latest-${{ github.run_id }}
           path: coverage/ubuntu
 
       - name: Download macOS coverage
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: coverage-macos-latest-${{ github.run_id }}
           path: coverage/macos
 
       - name: Download Windows coverage
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: coverage-windows-latest-${{ github.run_id }}
           path: coverage/windows
@@ -117,7 +117,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Post or update coverage comment
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: coverage-report
           message: ${{ steps.format.outputs.body }}

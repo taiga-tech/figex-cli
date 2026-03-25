@@ -94,14 +94,15 @@ impl WsSession {
     }
 }
 
-async fn send_ws_text<S>(sink: &mut S, text: String) -> Result<(), RuntimeError>
-where
-    S: futures_util::Sink<Message, Error = tokio_tungstenite::tungstenite::Error> + Unpin,
-{
+async fn send_ws_text(
+    sink: &mut futures_util::stream::SplitSink<WsStream, Message>,
+    text: String,
+) -> Result<(), RuntimeError> {
     map_ws_send_result(sink.send(Message::Text(text)).await)
 }
 
-fn map_ws_send_result(
+#[doc(hidden)]
+pub fn map_ws_send_result(
     result: Result<(), tokio_tungstenite::tungstenite::Error>,
 ) -> Result<(), RuntimeError> {
     match result {
@@ -111,46 +112,54 @@ fn map_ws_send_result(
 }
 
 #[doc(hidden)]
-pub fn map_ws_send_result_for_test(
-    result: Result<(), tokio_tungstenite::tungstenite::Error>,
-) -> Result<(), RuntimeError> {
-    map_ws_send_result(result)
+pub fn map_ws_incoming_message(
+    message: Option<Result<Message, tokio_tungstenite::tungstenite::Error>>,
+    id: u32,
+) -> Result<Option<serde_json::Value>, RuntimeError> {
+    match message {
+        Some(Ok(Message::Text(body))) => map_ws_text_message(&body, id),
+        Some(Ok(_)) => Ok(None),
+        Some(Err(_)) => Err(RuntimeError::AttachFailed),
+        None => Err(RuntimeError::AttachFailed),
+    }
 }
 
-async fn wait_for_matching_response<St>(
-    stream: &mut St,
+fn map_ws_text_message(body: &str, id: u32) -> Result<Option<serde_json::Value>, RuntimeError> {
+    let resp = match serde_json::from_str::<CdpResponse>(body) {
+        Ok(resp) => resp,
+        Err(_) => return Ok(None),
+    };
+    if resp.id != Some(id) {
+        return Ok(None);
+    }
+    if let Some(err) = resp.error {
+        let message = format!("code={}, message={}", err.code, err.message);
+        return Err(RuntimeError::EvaluateFailed(message));
+    }
+
+    Ok(Some(resp.result.unwrap_or(serde_json::Value::Null)))
+}
+
+async fn wait_for_matching_response(
+    stream: &mut futures_util::stream::SplitStream<WsStream>,
     id: u32,
     call_timeout: Duration,
-) -> Result<serde_json::Value, RuntimeError>
-where
-    St: futures_util::Stream<Item = Result<Message, tokio_tungstenite::tungstenite::Error>> + Unpin,
-{
+) -> Result<serde_json::Value, RuntimeError> {
     // Receive messages until we get the one with the matching id.
-    timeout(call_timeout, async {
+    let result = timeout(call_timeout, async {
         loop {
-            match stream.next().await {
-                Some(Ok(Message::Text(body))) => {
-                    let Ok(resp) = serde_json::from_str::<CdpResponse>(&body) else {
-                        continue;
-                    };
-                    if resp.id != Some(id) {
-                        continue;
-                    }
-                    if let Some(err) = resp.error {
-                        return Err(RuntimeError::EvaluateFailed(format!(
-                            "code={}, message={}",
-                            err.code, err.message
-                        )));
-                    }
-                    return Ok(resp.result.unwrap_or(serde_json::Value::Null));
-                }
-                Some(Ok(_)) => continue,
-                _ => return Err(RuntimeError::AttachFailed),
+            match map_ws_incoming_message(stream.next().await, id)? {
+                Some(value) => return Ok(value),
+                None => continue,
             }
         }
     })
-    .await
-    .map_err(|_| RuntimeError::Timeout)?
+    .await;
+
+    match result {
+        Ok(value) => value,
+        Err(_) => Err(RuntimeError::Timeout),
+    }
 }
 
 // ---------------------------------------------------------------------------

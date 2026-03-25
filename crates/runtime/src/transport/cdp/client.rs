@@ -89,16 +89,10 @@ impl WsSession {
         };
         let text = serde_json::to_string(&req).expect("CDP requests should always serialize");
 
-        send_ws_text(&mut self.sink, text).await?;
+        let send_result = self.sink.send(Message::Text(text)).await;
+        map_ws_send_result(send_result)?;
         wait_for_matching_response(&mut self.stream, id, call_timeout).await
     }
-}
-
-async fn send_ws_text(
-    sink: &mut futures_util::stream::SplitSink<WsStream, Message>,
-    text: String,
-) -> Result<(), RuntimeError> {
-    map_ws_send_result(sink.send(Message::Text(text)).await)
 }
 
 #[doc(hidden)]
@@ -116,12 +110,18 @@ pub fn map_ws_incoming_message(
     message: Option<Result<Message, tokio_tungstenite::tungstenite::Error>>,
     id: u32,
 ) -> Result<Option<serde_json::Value>, RuntimeError> {
-    match message {
-        Some(Ok(Message::Text(body))) => map_ws_text_message(&body, id),
-        Some(Ok(_)) => Ok(None),
-        Some(Err(_)) => Err(RuntimeError::AttachFailed),
-        None => Err(RuntimeError::AttachFailed),
-    }
+    let message = match message {
+        Some(Ok(message)) => message,
+        Some(Err(_)) => return Err(RuntimeError::AttachFailed),
+        None => return Err(RuntimeError::AttachFailed),
+    };
+
+    let body = match message {
+        Message::Text(body) => body,
+        _ => return Ok(None),
+    };
+
+    map_ws_text_message(&body, id)
 }
 
 fn map_ws_text_message(body: &str, id: u32) -> Result<Option<serde_json::Value>, RuntimeError> {
@@ -137,7 +137,12 @@ fn map_ws_text_message(body: &str, id: u32) -> Result<Option<serde_json::Value>,
         return Err(RuntimeError::EvaluateFailed(message));
     }
 
-    Ok(Some(resp.result.unwrap_or(serde_json::Value::Null)))
+    let value = match resp.result {
+        Some(value) => value,
+        None => serde_json::Value::Null,
+    };
+
+    Ok(Some(value))
 }
 
 async fn wait_for_matching_response(

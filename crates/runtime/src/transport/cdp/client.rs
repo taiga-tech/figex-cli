@@ -96,17 +96,24 @@ impl WsSession {
 
 async fn send_ws_text<S>(sink: &mut S, text: String) -> Result<(), RuntimeError>
 where
-    S: futures_util::Sink<Message> + Unpin,
+    S: futures_util::Sink<Message, Error = tokio_tungstenite::tungstenite::Error> + Unpin,
 {
     map_ws_send_result(sink.send(Message::Text(text)).await)
 }
 
-fn map_ws_send_result<T, E>(result: Result<T, E>) -> Result<T, RuntimeError> {
-    result.map_err(|_| RuntimeError::AttachFailed)
+fn map_ws_send_result(
+    result: Result<(), tokio_tungstenite::tungstenite::Error>,
+) -> Result<(), RuntimeError> {
+    match result {
+        Ok(()) => Ok(()),
+        Err(_) => Err(RuntimeError::AttachFailed),
+    }
 }
 
 #[doc(hidden)]
-pub fn map_ws_send_result_for_test(result: Result<(), ()>) -> Result<(), RuntimeError> {
+pub fn map_ws_send_result_for_test(
+    result: Result<(), tokio_tungstenite::tungstenite::Error>,
+) -> Result<(), RuntimeError> {
     map_ws_send_result(result)
 }
 

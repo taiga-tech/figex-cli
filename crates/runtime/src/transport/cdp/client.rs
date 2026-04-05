@@ -163,12 +163,11 @@ async fn wait_for_matching_response(
     id: u32,
     call_timeout: Duration,
 ) -> Result<serde_json::Value, RuntimeError> {
-    let result = timeout(call_timeout, read_until_matching_response(stream, id)).await;
+    let response = timeout(call_timeout, read_until_matching_response(stream, id))
+        .await
+        .map_err(|_| RuntimeError::Timeout)?;
 
-    match result {
-        Ok(value) => value,
-        Err(_) => Err(RuntimeError::Timeout),
-    }
+    response
 }
 
 // ---------------------------------------------------------------------------

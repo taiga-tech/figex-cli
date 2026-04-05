@@ -245,30 +245,74 @@ async fn subcommand_inspect_frame_runs_without_error() {
 // extract: output None / Some
 #[tokio::test]
 async fn subcommand_extract_frame_default_output() {
+    let (ws_listener, ws_port) = mock_cdp_server::bind_ws_listener().await;
+    tokio::spawn(mock_cdp_server::serve_two(ws_listener));
+    let http_port =
+        mock_cdp_server::spawn_figma_cdp_server("t-extract-default", "Figma - Extract", ws_port)
+            .await;
+
+    let tmp_dir = tempfile::TempDir::new().expect("temp dir");
+    let output = tmp_dir.path().join("raw.json");
+    let output_str = output.to_str().unwrap();
+    let port_str = http_port.to_string();
+
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
     run_io(
-        make_cli(&["extract", "frame", "my-frame"]),
+        make_cli(&[
+            "--host",
+            "127.0.0.1",
+            "--port",
+            &port_str,
+            "extract",
+            "frame",
+            "my-frame",
+            "--output",
+            output_str,
+        ]),
         &mut stdout,
         &mut stderr,
     )
     .await
     .expect("extract frame should succeed");
     assert!(stderr.is_empty());
+    assert!(output.exists(), "raw.json should have been written");
 }
 
 #[tokio::test]
 async fn subcommand_extract_frame_custom_output() {
+    let (ws_listener, ws_port) = mock_cdp_server::bind_ws_listener().await;
+    tokio::spawn(mock_cdp_server::serve_two(ws_listener));
+    let http_port =
+        mock_cdp_server::spawn_figma_cdp_server("t-extract-custom", "Figma - Extract", ws_port)
+            .await;
+
+    let tmp_dir = tempfile::TempDir::new().expect("temp dir");
+    let output = tmp_dir.path().join("out.json");
+    let output_str = output.to_str().unwrap();
+    let port_str = http_port.to_string();
+
     let mut stdout = Vec::new();
     let mut stderr = Vec::new();
     run_io(
-        make_cli(&["extract", "frame", "my-frame", "--output", "out.json"]),
+        make_cli(&[
+            "--host",
+            "127.0.0.1",
+            "--port",
+            &port_str,
+            "extract",
+            "frame",
+            "my-frame",
+            "--output",
+            output_str,
+        ]),
         &mut stdout,
         &mut stderr,
     )
     .await
     .expect("extract frame with output should succeed");
     assert!(stderr.is_empty());
+    assert!(output.exists(), "out.json should have been written");
 }
 
 // features: input None / Some, output None / Some

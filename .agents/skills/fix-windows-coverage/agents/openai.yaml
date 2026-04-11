@@ -1,4 +1,4 @@
 interface:
-  display_name: "Windows Coverage Fixer"
-  short_description: "Diagnose Windows-only coverage regressions"
-  default_prompt: "Use $fix-windows-coverage to find why coverage drops only on Windows CI and raise it back to 100%."
+  display_name: 'Windows Coverage Fixer'
+  short_description: 'Diagnose Windows-only coverage regressions'
+  default_prompt: 'Use $fix-windows-coverage to find why coverage drops only on Windows CI and raise it back to 100%.'

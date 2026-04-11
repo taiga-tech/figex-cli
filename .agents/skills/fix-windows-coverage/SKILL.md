@@ -10,8 +10,8 @@ Treat Windows-only coverage loss as a platform-delta problem, not a generic "wri
 ## Quick Start
 
 1. Identify which report regressed.
-   - TypeScript: `packages/cli/coverage/coverage-summary.json`
-   - Rust: `target/rust-coverage-summary.json`
+    - TypeScript: `packages/cli/coverage/coverage-summary.json`
+    - Rust: `target/rust-coverage-summary.json`
 2. Compare a passing non-Windows summary with the Windows summary by using `scripts/compare_coverage_json.mjs`.
 3. Read `references/figex-cli.md` for repo-specific commands, artifact paths, and Windows-sensitive hotspots.
 4. Patch the narrowest branch and add the matching test.

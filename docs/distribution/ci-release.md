@@ -13,19 +13,21 @@ live runtime を使う実機確認は、通常の PR CI とは分離する。
 
 ### 実行項目
 
-- Rust format
-- Rust clippy
-- Rust test
-- JS lint
-- JS test
-- schema validation
-- launcher build
+- `mise run test-coverage`
+- coverage artifact upload
+- PR では coverage comment 更新
 
 ### 目的
 
 - 変換ロジックの回帰を止める
 - packaging の基本破綻を早期に止める
-- `ui.ir.json` などの artifact shape を固定する
+- coverage の退行を早期に止める
+
+### 将来追加する項目
+
+- schema validation
+- launcher build smoke test
+- `features`, `normalize`, `report` を含む変換パイプラインの artifact 検証
 
 ## 3. Release build matrix
 
@@ -61,6 +63,10 @@ publish 順序は `platform -> launcher` に固定する。
 ### PR / release 共通
 
 - launcher が build できる
+- `attach`, `doctor`, `extract frame` の現在の runtime surface が失敗しない
+
+### 将来の smoke test 拡張
+
 - fixture 入力で `features`, `normalize`, `report` が実行できる
 - `ui.ir.json` が schema validation を通る
 
@@ -68,8 +74,9 @@ publish 順序は `platform -> launcher` に固定する。
 
 live runtime job を別で持てるなら、次を確認する。
 
-- `figex attach`
-- `figex doctor --json`
-- `figex extract frame <frame_ref>`
+- `cargo run -p figex-cli -- attach`
+- `cargo run -p figex-cli -- doctor --json`
+- `cargo run -p figex-cli -- extract frame <frame_ref>`
 
-この job は Figma Desktop 実機依存のため、通常 CI の必須条件にはしない。
+現状の CDP 検証は Chrome + Figma Web 版を前提にする。
+Figma Desktop は現状 CDP ポートを公開しないため、通常 CI の必須条件にはしない。

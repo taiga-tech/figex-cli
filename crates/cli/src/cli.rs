@@ -71,7 +71,7 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Connect to Figma Desktop runtime and verify the session
+    /// Connect to the selected Figma runtime and verify the session
     Attach,
 
     /// Diagnose the connection environment (port discovery, ping, snapshot check)

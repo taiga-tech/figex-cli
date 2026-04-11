@@ -1,0 +1,154 @@
+{
+    "version": "1",
+    "frame": {
+        "frame_ref": "my-frame",
+        "frame_id": "1:2",
+        "frame_name": "Home Screen",
+        "transport": "cdp",
+        "host": "127.0.0.1",
+        "port": 9222,
+        "captured_at": 1700000000000,
+        "tool_version": "0.1.0"
+    },
+    "nodes": [
+        {
+            "id": "1:2",
+            "parent_id": null,
+            "name": "Home Screen",
+            "node_type": "FRAME",
+            "visible": true,
+            "locked": false,
+            "opacity": 1.0,
+            "corner_radius": null,
+            "component_id": null,
+            "is_instance": false
+        },
+        {
+            "id": "1:3",
+            "parent_id": "1:2",
+            "name": "Button",
+            "node_type": "INSTANCE",
+            "visible": true,
+            "locked": false,
+            "opacity": 1.0,
+            "corner_radius": {
+                "top_left": 8.0,
+                "top_right": 8.0,
+                "bottom_right": 8.0,
+                "bottom_left": 8.0
+            },
+            "component_id": "100:1",
+            "is_instance": true
+        }
+    ],
+    "edges": [
+        {
+            "parent_id": "1:2",
+            "child_id": "1:3",
+            "index": 0
+        }
+    ],
+    "texts": [
+        {
+            "node_id": "1:4",
+            "content": "Submit",
+            "style": {
+                "font_family": "Inter",
+                "font_size": 14.0,
+                "font_weight": 600,
+                "line_height": 20.0,
+                "letter_spacing": 0.0,
+                "text_align": "center"
+            }
+        }
+    ],
+    "fills": [
+        {
+            "node_id": "1:3",
+            "fill_type": "solid",
+            "color": {
+                "r": 0.2,
+                "g": 0.4,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "opacity": null,
+            "visible": true,
+            "blend_mode": "normal"
+        }
+    ],
+    "bounds": [
+        {
+            "node_id": "1:2",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 375.0,
+            "height": 812.0,
+            "bounds_type": "absolute"
+        },
+        {
+            "node_id": "1:3",
+            "x": 16.0,
+            "y": 720.0,
+            "width": 343.0,
+            "height": 48.0,
+            "bounds_type": "absolute"
+        }
+    ],
+    "auto_layout": [
+        {
+            "node_id": "1:2",
+            "direction": "vertical",
+            "gap": 16.0,
+            "padding_top": 24.0,
+            "padding_right": 16.0,
+            "padding_bottom": 24.0,
+            "padding_left": 16.0,
+            "align_main": "flex-start",
+            "align_cross": "stretch",
+            "wrap": false,
+            "sizing_mode_main": "fixed",
+            "sizing_mode_cross": "fixed"
+        }
+    ],
+    "effects": [
+        {
+            "node_id": "1:3",
+            "effect_type": "drop_shadow",
+            "visible": true,
+            "radius": 4.0,
+            "color": {
+                "r": 0.0,
+                "g": 0.0,
+                "b": 0.0,
+                "a": 0.15
+            },
+            "offset_x": 0.0,
+            "offset_y": 2.0
+        }
+    ],
+    "strokes": [
+        {
+            "node_id": "1:3",
+            "stroke_type": "solid",
+            "color": {
+                "r": 0.15,
+                "g": 0.35,
+                "b": 0.9,
+                "a": 1.0
+            },
+            "weight": 1.5,
+            "align": "inside",
+            "visible": true,
+            "blend_mode": "normal"
+        }
+    ],
+    "export_hints": [
+        {
+            "node_id": "1:2",
+            "format": "PNG",
+            "suffix": "@2x",
+            "scale": 2.0
+        }
+    ]
+}

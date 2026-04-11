@@ -1,6 +1,7 @@
 # CLI 仕様
 
-この文書は公開 CLI surface の正本である。
+この文書は目標とする公開 CLI surface の正本である。
+実装進捗の現状は README と testing / CI 文書を参照すること。
 
 ## 命名
 
@@ -27,6 +28,9 @@ figex report --input ui.ir.json --output report.md
 - runtime に触るのは `attach`, `doctor`, `inspect`, `extract`
 - 変換系は file-in / file-out に寄せる
 - `report` は `ui.ir.json` を読むだけで、runtime 接続を前提にしない
+
+現時点では `attach`, `doctor`, `extract frame` が先行実装されている。
+`inspect`, `features`, `normalize`, `report` は公開 surface 上の予約済みコマンドで、実装は段階的に追加する。
 
 ## コマンド定義
 

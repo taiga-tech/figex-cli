@@ -206,7 +206,11 @@ function main() {
     for (const filePath of [...allFiles].sort()) {
         const baselineMetrics = baseline.files.get(filePath) ?? {}
         const candidateMetrics = candidate.files.get(filePath) ?? {}
-        const result = compareMetrics(filePath, baselineMetrics, candidateMetrics)
+        const result = compareMetrics(
+            filePath,
+            baselineMetrics,
+            candidateMetrics
+        )
 
         if (result.regressions.length > 0 || result.gaps.length > 0) {
             fileNotes.push(...result.regressions, ...result.gaps)

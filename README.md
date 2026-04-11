@@ -13,22 +13,23 @@ npm install -g @taiga-tech/figex-cli
 ## クイックスタート
 
 ```bash
-# Figma Desktop の接続を確認
+# Figma runtime の接続を確認
 figex doctor
 
-# Figma Desktop にアタッチ
+# Figma runtime にアタッチ
 figex attach
 ```
 
 ## コマンド一覧
 
-### `figex attach` — Figma Desktop に接続
+### `figex attach` — Figma runtime に接続
 
-Figma Desktop ランタイムに接続し、セッション情報を表示します。
+選択された Figma runtime に接続し、セッション情報を表示します。
+CDP transport のローカル確認は、現状 Chrome + Figma Web 版を使う手順を推奨します。
 
 ```bash
 figex attach
-figex attach --host localhost --port 18412
+figex attach --host 127.0.0.1 --port 9222
 ```
 
 ### `figex doctor` — 接続環境を診断
@@ -49,7 +50,7 @@ figex inspect frame "My Frame"
 figex inspect frame figma://...
 ```
 
-### `figex extract frame <FRAME_REF>` — フレームを抽出 ⚠️ 未実装
+### `figex extract frame <FRAME_REF>` — フレームを抽出
 
 指定フレームの生スナップショットを取得し、JSON ファイルに保存します。
 
@@ -61,6 +62,9 @@ figex extract frame "My Frame" --output raw.json
 | オプション            | 説明             | デフォルト |
 | --------------------- | ---------------- | ---------- |
 | `-o, --output <PATH>` | 出力ファイルパス | `raw.json` |
+
+現状の `extract frame` は canonical な `raw.json` の保存フローを提供します。
+`frame` には source metadata / runtime metadata が入り、`nodes` などの配列は runtime mapper の拡張前は空配列になることがあります。
 
 ### `figex features` — 特徴量ファイルを生成 ⚠️ 未実装
 
@@ -107,9 +111,9 @@ figex report --input ui.ir.json --output report.md
 ## 処理パイプライン
 
 ```text
-Figma Desktop
+Figma runtime
     ↓  attach / doctor（接続確認）
-extract frame → raw.json          ← ⚠️ 未実装
+extract frame → raw.json
     ↓  features
 features.json                     ← ⚠️ 未実装
     ↓  normalize
@@ -125,11 +129,11 @@ report.md                         ← ⚠️ 未実装
 | フラグ                | 説明                                                        | デフォルト              |
 | --------------------- | ----------------------------------------------------------- | ----------------------- |
 | `--json`              | 出力を JSON 形式にする                                      | false                   |
-| `--pretty`            | JSON を整形出力する                                         | false                   |
-| `--timeout-ms <MS>`   | 接続タイムアウト（ミリ秒）                                  | 設定ファイル依存        |
+| `--pretty`            | JSON を整形出力する                                         | true                    |
+| `--timeout-ms <MS>`   | 接続タイムアウト（ミリ秒）                                  | `5000`                  |
 | `--transport <TYPE>`  | トランスポート種別（`cdp` / `mcp` / `auto`）                | `auto`                  |
-| `--host <HOST>`       | 接続先ホスト                                                | `localhost`             |
-| `--port <PORT>`       | 接続先ポート                                                | `18412`                 |
+| `--host <HOST>`       | 接続先ホスト                                                | `127.0.0.1`             |
+| `--port <PORT>`       | 接続先ポート                                                | `9222`                  |
 | `--config <PATH>`     | 設定ファイルのパス                                          | `figex.toml` を自動探索 |
 | `--log-level <LEVEL>` | ログレベル（`error` / `warn` / `info` / `debug` / `trace`） | `warn`                  |
 
@@ -140,11 +144,14 @@ report.md                         ← ⚠️ 未実装
 プロジェクトルートに `figex.toml` を置くと設定を共有できます。
 
 ```toml
-host = "localhost"
-port = 18412
+[runtime]
+host = "127.0.0.1"
+port = 9222
 timeout_ms = 5000
 transport = "auto"
-log_level = "warn"
+
+[output]
+pretty = true
 ```
 
 ## 注意点

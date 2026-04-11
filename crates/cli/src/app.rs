@@ -131,7 +131,7 @@ async fn dispatch_io(command: Commands, ctx: &AppContext, stdout: &mut dyn Write
         } => commands::inspect::run(ctx, &frame_ref),
         Commands::Extract {
             subcommand: ExtractSubcommand::Frame { frame_ref, output },
-        } => commands::extract::run(ctx, &frame_ref, output),
+        } => commands::extract::run(ctx, &frame_ref, output).await,
         Commands::Features { input, output } => commands::features::run(ctx, input, output),
         Commands::Normalize { input, output } => commands::normalize::run(ctx, input, output),
         Commands::Report { input, output } => commands::report::run(ctx, input, output),

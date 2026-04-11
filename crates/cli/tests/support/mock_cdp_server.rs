@@ -68,6 +68,39 @@ fn success_response(method: &str) -> serde_json::Value {
     })
 }
 
+/// Accepts exactly two consecutive WebSocket connections on the same listener,
+/// serving each with `success_response`.  Use this when the code under test
+/// creates two independent WS connections (e.g. `attach` + `snapshot_frame`).
+pub async fn serve_two(listener: TcpListener) {
+    serve_one_with_handler_ref(&listener, success_response).await;
+    serve_one_with_handler_ref(&listener, success_response).await;
+}
+
+async fn serve_one_with_handler_ref<F>(listener: &TcpListener, mut response_for: F)
+where
+    F: FnMut(&str) -> serde_json::Value,
+{
+    if let Ok((stream, _)) = listener.accept().await {
+        let ws = accept_async(stream).await.unwrap();
+        let (mut sink, mut stream) = ws.split();
+        while let Some(Ok(Message::Text(text))) = stream.next().await {
+            let req: serde_json::Value = serde_json::from_str(&text).unwrap();
+            let id = req["id"].as_u64().unwrap_or(0);
+            let method = req["method"].as_str().unwrap_or("");
+            let payload = response_for(method);
+
+            let mut resp = json!({ "id": id });
+            resp.as_object_mut()
+                .unwrap()
+                .extend(payload.as_object().unwrap().clone());
+
+            if sink.send(Message::Text(resp.to_string())).await.is_err() {
+                break;
+            }
+        }
+    }
+}
+
 pub async fn spawn_figma_cdp_server(id: &str, title: &str, ws_port: u16) -> u16 {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let port = listener.local_addr().unwrap().port();

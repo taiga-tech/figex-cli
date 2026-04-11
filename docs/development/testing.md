@@ -91,7 +91,7 @@ curl -s http://localhost:9222/json/version
 **`doctor` コマンド（JSON）**
 
 ```bash
-./target/debug/figex-cli doctor --json
+cargo run -p figex-cli -- doctor --json
 ```
 
 期待する出力:
@@ -116,9 +116,34 @@ curl -s http://localhost:9222/json/version
 **`attach` コマンド**
 
 ```bash
-./target/debug/figex-cli attach
+cargo run -p figex-cli -- attach
 # → "Attached to Figma runtime" と接続情報が表示され exit code 0 で終了
 ```
+
+**`extract frame` コマンド（#7）**
+
+まず mock runtime ベースの自動検証を回す。
+
+```bash
+cargo test -p figex-cli --test extract -- --nocapture
+cargo test -p figex-cli --test app subcommand_extract_frame -- --nocapture
+```
+
+次に Chrome + Figma Web 版へ接続して手動確認する。
+
+```bash
+cargo run -p figex-cli -- --host 127.0.0.1 --port 9222 doctor --json --pretty
+cargo run -p figex-cli -- --host 127.0.0.1 --port 9222 extract frame "My Frame" --output /tmp/raw.json
+jq '{version, frame, top_level_keys: keys}' /tmp/raw.json
+```
+
+ここでは少なくとも次を確認する。
+
+- `/tmp/raw.json` が生成される
+- top-level keys に `version`, `frame`, `nodes`, `edges`, `texts`, `fills`, `bounds`, `auto_layout`, `effects`, `strokes`, `export_hints` が含まれる
+- `frame.frame_ref` が指定した frame ref と一致する
+- `frame.transport` が `cdp`、`frame.host` が `127.0.0.1` になる
+- 現状の実装では frame/runtime metadata の保存フロー確認が中心のため、`nodes` などの配列は空のままでもよい
 
 **ignored テスト一括実行**
 

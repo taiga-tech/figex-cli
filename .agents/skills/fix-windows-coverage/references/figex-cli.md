@@ -42,19 +42,19 @@ The helper script normalizes Windows and POSIX absolute paths before diffing.
 ### TypeScript
 
 - `packages/cli/src/index.ts`
-  - `process.platform === 'win32'`
-  - `.exe` binary name selection
-  - `spawnSync` failure and exit-code fallback branches
+    - `process.platform === 'win32'`
+    - `.exe` binary name selection
+    - `spawnSync` failure and exit-code fallback branches
 - `packages/cli/src/platform.ts`
-  - `win32/x64` package and triple mapping
-  - unsupported platform and arch branches
+    - `win32/x64` package and triple mapping
+    - unsupported platform and arch branches
 - `packages/cli/src/index.test.ts`
-  - existing mocks for `process.platform`, `process.arch`, `process.argv`, `familySync`, `spawnSync`, and package resolution
+    - existing mocks for `process.platform`, `process.arch`, `process.argv`, `familySync`, `spawnSync`, and package resolution
 
 ### Rust
 
 - `crates/cli/tests/support/run_figex_cli.rs`
-  - `cfg!(windows)` branch for `figex-cli.exe`
+    - `cfg!(windows)` branch for `figex-cli.exe`
 
 Search again before changing code because new Windows-specific seams may have been added:
 
